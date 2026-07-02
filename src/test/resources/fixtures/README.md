@@ -4,7 +4,7 @@ Real conflict cases for the analysis passes, gathered from live modpacks. Each d
 
 ## missing-dependency
 
-`amendments` declares `"depends": { "moonlight": ">=1.20-2.16.0" }`, and no jar in the set provides `moonlight`. Expected finding: missing dependency `moonlight` for `amendments`. `fabric-api` is included so the mod's `"fabric": "*"` dependency is satisfied and `moonlight` is the only missing one (besides the platform-provided `minecraft` / `java` / `fabricloader` ids, which the resolver must treat as always present).
+`iris` declares `"depends": { "sodium": ["0.5.x"] }`, and no jar in the set provides `sodium`. Expected finding: missing dependency `sodium` for `iris`. Its only other dependencies are `minecraft` and `fabricloader`, which the resolver must treat as platform-provided and always present, so `sodium` is the single expected finding.
 
 ## version-range-violation
 
@@ -16,18 +16,16 @@ Real conflict cases for the analysis passes, gathered from live modpacks. Each d
 
 ## wrong-loader
 
-`corpse` is a Forge mod: it carries `META-INF/mods.toml` and no `fabric.mod.json`. Expected finding in a Fabric set: wrong-loader jar. Caveat learned from the source pack: it ran this jar on purpose through Kilt, a Forge-on-Fabric compatibility layer, so the wrong-loader pass should downgrade or suppress the finding when such a layer (Kilt, Sinytra Connector) is present in the set.
+`jei` (Just Enough Items) in its Forge build: the jar carries `META-INF/mods.toml` and no `fabric.mod.json`. Expected finding in a Fabric set: wrong-loader jar. Caveat learned from the source packs: compatibility layers make cross-loader jars intentional (one pack runs Forge mods on Fabric through Kilt, another runs Fabric mods on Forge through Sinytra Connector), so the wrong-loader pass should downgrade or suppress the finding when such a layer is present in the set.
 
 ## Provenance
 
 | Fixture jar | Source |
 |---|---|
-| amendments-1.20-2.2.5-fabric | Valhalla Revolutions pack (MC 1.20.1) |
-| fabric-api-0.92.9+1.20.1 | Valhalla Revolutions pack (MC 1.20.1) |
 | iris-1.7.6+mc1.20.1 | Valhalla Revolutions pack (MC 1.20.1) |
 | sodium-fabric-0.6.13+mc1.21.1 | The Harpy Express pack (MC 1.21.1) |
 | sodium-fabric-0.8.12+mc1.21.11 | Feather Client instance (MC 1.21.11) |
 | iris-fabric-1.10.4+mc1.21.11 | Yet Another Bingo pack (MC 1.21.11) |
-| corpse-forge-1.20.1-1.0.23 | Valhalla Revolutions pack (MC 1.20.1) |
+| jei-1.20.1-forge-15.20.0.130 | Sarkovia Pirate Event pack (MC 1.20.1, Forge) |
 
 The two mods in `version-range-violation` and the sodium pair across `version-range-violation` / `declared-breaks` come from packs for different Minecraft versions; combining them is what seeds the conflict. Combining the two sodium versions in one set also gives a duplicate-mod-id case for free.

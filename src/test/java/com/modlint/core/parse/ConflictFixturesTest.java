@@ -25,8 +25,7 @@ class ConflictFixturesTest {
 
     static Stream<Arguments> fabricFixtures() {
         return Stream.of(
-            Arguments.of("missing-dependency", "amendments-1.20-2.2.5-fabric", "amendments", "1.20-2.2.5"),
-            Arguments.of("missing-dependency", "fabric-api-0.92.9+1.20.1", "fabric-api", "0.92.9+1.20.1"),
+            Arguments.of("missing-dependency", "iris-1.7.6+mc1.20.1", "iris", "1.7.6+mc1.20.1"),
             Arguments.of("version-range-violation", "iris-1.7.6+mc1.20.1", "iris", "1.7.6+mc1.20.1"),
             Arguments.of("version-range-violation", "sodium-fabric-0.6.13+mc1.21.1", "sodium", "0.6.13+mc1.21.1"),
             Arguments.of("declared-breaks", "sodium-fabric-0.8.12+mc1.21.11", "sodium", "0.8.12+mc1.21.11"),
@@ -56,6 +55,6 @@ class ConflictFixturesTest {
     }
 
     static Stream<Arguments> wrongLoaderFixture() {
-        return Stream.of(Arguments.of("wrong-loader", "corpse-forge-1.20.1-1.0.23"));
+        return Stream.of(Arguments.of("wrong-loader", "jei-1.20.1-forge-15.20.0.130"));
     }
 }

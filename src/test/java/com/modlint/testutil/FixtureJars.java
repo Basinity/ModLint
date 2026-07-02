@@ -15,7 +15,7 @@ public final class FixtureJars {
     private FixtureJars() {
     }
 
-    /** Resolves a fixture mod directory, e.g. {@code fixture("wrong-loader", "corpse-forge-1.20.1-1.0.23")}. */
+    /** Resolves a fixture mod directory, e.g. {@code fixture("wrong-loader", "jei-1.20.1-forge-15.20.0.130")}. */
     public static Path fixture(String conflictCase, String modDir) {
         try {
             Path fixtures = Path.of(FixtureJars.class.getClassLoader().getResource("fixtures").toURI());
