@@ -22,10 +22,10 @@ Real conflict cases for the analysis passes, gathered from live modpacks. Each d
 
 | Fixture jar | Source |
 |---|---|
-| iris-1.7.6+mc1.20.1 | Valhalla Revolutions pack (MC 1.20.1) |
-| sodium-fabric-0.6.13+mc1.21.1 | The Harpy Express pack (MC 1.21.1) |
-| sodium-fabric-0.8.12+mc1.21.11 | Feather Client instance (MC 1.21.11) |
-| iris-fabric-1.10.4+mc1.21.11 | Yet Another Bingo pack (MC 1.21.11) |
-| jei-1.20.1-forge-15.20.0.130 | Sarkovia Pirate Event pack (MC 1.20.1, Forge) |
+| iris-1.7.6+mc1.20.1 | a live Fabric modpack (MC 1.20.1) |
+| sodium-fabric-0.6.13+mc1.21.1 | a live Fabric modpack (MC 1.21.1) |
+| sodium-fabric-0.8.12+mc1.21.11 | a live Fabric instance (MC 1.21.11) |
+| iris-fabric-1.10.4+mc1.21.11 | a live Fabric modpack (MC 1.21.11) |
+| jei-1.20.1-forge-15.20.0.130 | a live Forge modpack (MC 1.20.1) |
 
 The two mods in `version-range-violation` and the sodium pair across `version-range-violation` / `declared-breaks` come from packs for different Minecraft versions; combining them is what seeds the conflict. Combining the two sodium versions in one set also gives a duplicate-mod-id case for free.
