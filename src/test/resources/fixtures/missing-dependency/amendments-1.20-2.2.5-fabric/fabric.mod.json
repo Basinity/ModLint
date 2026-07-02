@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "amendments",
+  "version": "1.20-2.2.5",
+  "name": "Amendments",
+  "description": "Many tweaks to Vanilla Blocks",
+  "authors": [
+    "MehVahdJukaar"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/amendments",
+    "sources": "https://github.com/MehVahdJukaar/amendments"
+  },
+  "license": "Supplementaries Team License v.1.5",
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.mehvahdjukaar.amendments.fabric.AmendmentsFabric"
+    ],
+    "modmenu": [
+      "net.mehvahdjukaar.amendments.integration.fabric.ModMenuCompat"
+    ]
+  },
+  "mixins": [
+    "amendments.mixins.json",
+    "amendments-common.mixins.json"
+  ],
+  "depends": {
+    "fabric": "*",
+    "minecraft": "\u003e\u003d1.20 \u003c1.21",
+    "moonlight": "\u003e\u003d1.20-2.16.0"
+  },
+  "conflicts": {
+    "supplementaries": "\u003c1.20-2.8.0"
+  },
+  "breaks": {
+    "carpeted": "*",
+    "betterlily": "*",
+    "betterjukebox": "*"
+  },
+  "accessWidener": "amendments.accesswidener",
+  "jars": [
+    {
+      "file": "META-INF/jars/mixinextras-fabric-0.4.1.jar"
+    }
+  ]
+}
