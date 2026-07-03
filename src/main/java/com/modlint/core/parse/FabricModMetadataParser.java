@@ -1,15 +1,22 @@
 package com.modlint.core.parse;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.modlint.core.model.ModInfo;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /** Parses the contents of a {@code fabric.mod.json} into a {@link ModInfo}. */
 public final class FabricModMetadataParser {
 
     /**
      * Parses a {@code fabric.mod.json} document. {@code name} falls back to {@code id} when absent,
-     * matching how Fabric loader treats a mod with no display name.
+     * matching how Fabric loader treats a mod with no display name. Absent {@code provides} and
+     * relation sections come back empty, never null.
      *
      * @throws IllegalArgumentException if a required field is missing
      */
@@ -18,7 +25,11 @@ public final class FabricModMetadataParser {
         String id = requireString(root, "id");
         String version = requireString(root, "version");
         String name = root.has("name") ? root.get("name").getAsString() : id;
-        return new ModInfo(id, version, name);
+        return new ModInfo(id, version, name,
+                stringList(root, "provides"),
+                relationMap(root, "depends"),
+                relationMap(root, "breaks"),
+                relationMap(root, "conflicts"));
     }
 
     private static String requireString(JsonObject root, String field) {
@@ -26,5 +37,39 @@ public final class FabricModMetadataParser {
             throw new IllegalArgumentException("fabric.mod.json is missing required field '" + field + "'");
         }
         return root.get(field).getAsString();
+    }
+
+    private static List<String> stringList(JsonObject root, String field) {
+        if (!root.has(field)) {
+            return List.of();
+        }
+        List<String> values = new ArrayList<>();
+        for (JsonElement element : root.getAsJsonArray(field)) {
+            values.add(element.getAsString());
+        }
+        return List.copyOf(values);
+    }
+
+    /** Reads a relation section ({@code depends} etc.), where each value is a string or an array of strings. */
+    private static Map<String, List<String>> relationMap(JsonObject root, String field) {
+        if (!root.has(field)) {
+            return Map.of();
+        }
+        Map<String, List<String>> relations = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonElement> entry : root.getAsJsonObject(field).entrySet()) {
+            JsonElement value = entry.getValue();
+            List<String> ranges;
+            if (value.isJsonArray()) {
+                ranges = new ArrayList<>();
+                for (JsonElement range : value.getAsJsonArray()) {
+                    ranges.add(range.getAsString());
+                }
+                ranges = List.copyOf(ranges);
+            } else {
+                ranges = List.of(value.getAsString());
+            }
+            relations.put(entry.getKey(), ranges);
+        }
+        return Collections.unmodifiableMap(relations);
     }
 }

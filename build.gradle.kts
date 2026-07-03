@@ -1,5 +1,10 @@
 plugins {
     java
+    application
+}
+
+application {
+    mainClass = "com.modlint.cli.Main"
 }
 
 group = "com.modlint"
