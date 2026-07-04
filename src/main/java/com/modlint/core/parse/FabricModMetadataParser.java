@@ -29,7 +29,20 @@ public final class FabricModMetadataParser {
                 stringList(root, "provides"),
                 relationMap(root, "depends"),
                 relationMap(root, "breaks"),
-                relationMap(root, "conflicts"));
+                relationMap(root, "conflicts"),
+                nestedJarPaths(root));
+    }
+
+    /** Reads the {@code jars} section, a list of {@code {"file": "META-INF/jars/..."}} objects. */
+    private static List<String> nestedJarPaths(JsonObject root) {
+        if (!root.has("jars")) {
+            return List.of();
+        }
+        List<String> paths = new ArrayList<>();
+        for (JsonElement entry : root.getAsJsonArray("jars")) {
+            paths.add(entry.getAsJsonObject().get("file").getAsString());
+        }
+        return List.copyOf(paths);
     }
 
     private static String requireString(JsonObject root, String field) {

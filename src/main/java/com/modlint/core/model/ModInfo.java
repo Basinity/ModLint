@@ -11,6 +11,9 @@ import java.util.Map;
  * <p>Relation maps go from a mod id to its declared version-range predicates, kept as
  * raw strings (e.g. {@code ">=1.20 <1.21"}, {@code "0.5.x"}); multiple predicates for
  * one id are alternatives (OR). Evaluating them is the dependency resolver's job.
+ *
+ * <p>{@code nestedJars} are the jar-in-jar entry paths this mod bundles (fabric.mod.json
+ * {@code jars}); the mods inside them count as present for dependency resolution.
  */
 public record ModInfo(
         String id,
@@ -19,5 +22,6 @@ public record ModInfo(
         List<String> provides,
         Map<String, List<String>> depends,
         Map<String, List<String>> breaks,
-        Map<String, List<String>> conflicts) {
+        Map<String, List<String>> conflicts,
+        List<String> nestedJars) {
 }

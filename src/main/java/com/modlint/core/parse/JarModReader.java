@@ -1,6 +1,7 @@
 package com.modlint.core.parse;
 
 import com.modlint.core.model.ModLoader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -8,9 +9,11 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /** Reads mod metadata out of a mod jar. */
 public final class JarModReader {
@@ -60,5 +63,39 @@ public final class JarModReader {
                 return new String(in.readAllBytes(), StandardCharsets.UTF_8);
             }
         }
+    }
+
+    /** Returns the bytes of one entry of a jar on disk, or empty if the jar has no such entry. */
+    public Optional<byte[]> readEntry(Path jar, String entryPath) throws IOException {
+        try (JarFile jarFile = new JarFile(jar.toFile())) {
+            ZipEntry entry = jarFile.getEntry(entryPath);
+            if (entry == null) {
+                return Optional.empty();
+            }
+            try (InputStream in = jarFile.getInputStream(entry)) {
+                return Optional.of(in.readAllBytes());
+            }
+        }
+    }
+
+    /**
+     * Returns the bytes of one entry of an in-memory jar (a nested jar-in-jar), or empty if
+     * the jar has no such entry.
+     */
+    public Optional<byte[]> readEntry(byte[] jarBytes, String entryPath) throws IOException {
+        try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(jarBytes))) {
+            for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
+                if (entry.getName().equals(entryPath)) {
+                    return Optional.of(in.readAllBytes());
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** Returns the UTF-8 {@code fabric.mod.json} of an in-memory jar, or empty if it has none. */
+    public Optional<String> readFabricMetadata(byte[] jarBytes) throws IOException {
+        return readEntry(jarBytes, FABRIC_METADATA_ENTRY)
+                .map(bytes -> new String(bytes, StandardCharsets.UTF_8));
     }
 }

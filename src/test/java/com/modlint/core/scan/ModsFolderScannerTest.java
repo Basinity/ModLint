@@ -7,6 +7,7 @@ import com.modlint.core.model.ModInfo;
 import com.modlint.core.model.ModLoader;
 import com.modlint.core.model.ScannedJar;
 import com.modlint.testutil.FixtureJars;
+import com.modlint.testutil.SyntheticJars;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,5 +41,19 @@ class ModsFolderScannerTest {
         ScannedJar jei = jars.get(1);
         assertEquals(Set.of(ModLoader.FORGE), jei.loaders());
         assertTrue(jei.fabricMod().isEmpty());
+    }
+
+    @Test
+    void collectsNestedJarInJarMods(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJarWithNested(dir.resolve("outer.jar"), "outer", "1.0.0", "inner", "2.0.0");
+
+        List<ScannedJar> jars = scanner.scan(dir);
+
+        assertEquals(1, jars.size());
+        assertEquals("outer", jars.get(0).fabricMod().orElseThrow().id());
+        assertEquals(1, jars.get(0).nestedMods().size());
+        ModInfo inner = jars.get(0).nestedMods().get(0);
+        assertEquals("inner", inner.id());
+        assertEquals("2.0.0", inner.version());
     }
 }

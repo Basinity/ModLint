@@ -30,7 +30,8 @@ public final class ModsFolderScanner {
     }
 
     /**
-     * Scans every {@code .jar} directly in {@code modsFolder}, sorted by file name.
+     * Scans every {@code .jar} directly in {@code modsFolder}, sorted by file name. Fabric jars
+     * also have their nested jar-in-jar mods collected, so provided ids are complete.
      *
      * @throws IOException if the folder or a jar cannot be read, or a jar's Fabric metadata is invalid
      */
@@ -47,13 +48,35 @@ public final class ModsFolderScanner {
     private ScannedJar scanJar(Path jar) throws IOException {
         Set<ModLoader> loaders = reader.detectLoaders(jar);
         Optional<ModInfo> fabricMod = Optional.empty();
+        List<ModInfo> nestedMods = new ArrayList<>();
         if (loaders.contains(ModLoader.FABRIC)) {
             try {
-                fabricMod = Optional.of(parser.parse(reader.readFabricMetadata(jar)));
+                ModInfo mod = parser.parse(reader.readFabricMetadata(jar));
+                fabricMod = Optional.of(mod);
+                for (String nestedPath : mod.nestedJars()) {
+                    reader.readEntry(jar, nestedPath).ifPresent(bytes -> collectNested(bytes, nestedMods));
+                }
             } catch (RuntimeException e) {
                 throw new IOException(jar + " has invalid fabric.mod.json: " + e.getMessage(), e);
             }
         }
-        return new ScannedJar(jar, loaders, fabricMod);
+        return new ScannedJar(jar, loaders, fabricMod, List.copyOf(nestedMods));
+    }
+
+    /** Collects the in-memory jar's Fabric mod and recurses into its own nested jars. */
+    private void collectNested(byte[] jarBytes, List<ModInfo> out) {
+        try {
+            Optional<String> metadata = reader.readFabricMetadata(jarBytes);
+            if (metadata.isEmpty()) {
+                return;
+            }
+            ModInfo mod = parser.parse(metadata.get());
+            out.add(mod);
+            for (String nestedPath : mod.nestedJars()) {
+                reader.readEntry(jarBytes, nestedPath).ifPresent(bytes -> collectNested(bytes, out));
+            }
+        } catch (IOException | RuntimeException e) {
+            // A broken nested jar never fails the scan; its ids simply don't count as present.
+        }
     }
 }
