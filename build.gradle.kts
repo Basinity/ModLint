@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass = "com.modlint.cli.Main"
+    mainClass = "com.modlint.cli.ModLintCommand"
 }
 
 group = "com.modlint"
@@ -23,6 +23,7 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("info.picocli:picocli:4.7.7")
     // Only for its version / version-range parsing, so range semantics match the loader's own.
     implementation("net.fabricmc:fabric-loader:0.19.3") {
         isTransitive = false
