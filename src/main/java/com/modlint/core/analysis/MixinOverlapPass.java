@@ -40,8 +40,9 @@ public final class MixinOverlapPass implements AnalysisPass {
             findings.add(new Finding("mixin-overlap", Severity.POTENTIAL,
                     modIds,
                     "Intrusive Mixin injections from several mods hit " + entry.getKey()
-                            + ": " + injectors + ". Whichever applies last wins, and the loser may misbehave.",
-                    "Test this pair in game; if it works, suppress this finding via the ignore file."));
+                            + ": " + injectors + ". Whichever applies last wins, and the rest may misbehave.",
+                    (modIds.size() == 2 ? "Test this pair" : "Test these " + modIds.size() + " mods together")
+                            + " in game; if they coexist fine, suppress this finding via the ignore file."));
         }
         return findings;
     }

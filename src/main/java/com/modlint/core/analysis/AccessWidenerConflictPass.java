@@ -42,7 +42,9 @@ public final class AccessWidenerConflictPass implements AnalysisPass {
             findings.add(new Finding("access-widener-conflict", Severity.LOW,
                     List.copyOf(byMod.keySet()),
                     "Several mods widen '" + entry.getKey() + "' divergently: " + detail + ".",
-                    "Usually harmless (widenings are additive), but verify both mods behave; then suppress."));
+                    "Usually harmless (widenings are additive), but verify "
+                            + (byMod.size() == 2 ? "both mods" : "all " + byMod.size() + " mods")
+                            + " behave; then suppress."));
         }
         return findings;
     }
