@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -62,6 +64,20 @@ public final class JarModReader {
             try (InputStream in = jarFile.getInputStream(entry)) {
                 return new String(in.readAllBytes(), StandardCharsets.UTF_8);
             }
+        }
+    }
+
+    /** Returns the entry names of a jar on disk, directories excluded. */
+    public List<String> listEntries(Path jar) throws IOException {
+        try (JarFile jarFile = new JarFile(jar.toFile())) {
+            List<String> names = new ArrayList<>();
+            for (var entries = jarFile.entries(); entries.hasMoreElements(); ) {
+                ZipEntry entry = entries.nextElement();
+                if (!entry.isDirectory()) {
+                    names.add(entry.getName());
+                }
+            }
+            return List.copyOf(names);
         }
     }
 

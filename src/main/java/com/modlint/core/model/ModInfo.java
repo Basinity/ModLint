@@ -14,6 +14,8 @@ import java.util.Map;
  *
  * <p>{@code nestedJars} are the jar-in-jar entry paths this mod bundles (fabric.mod.json
  * {@code jars}); the mods inside them count as present for dependency resolution.
+ * {@code mixinConfigs} are the Mixin config entry names, {@code accessWidener} the access
+ * widener entry name or null; both feed the deep analysis passes.
  */
 public record ModInfo(
         String id,
@@ -23,5 +25,7 @@ public record ModInfo(
         Map<String, List<String>> depends,
         Map<String, List<String>> breaks,
         Map<String, List<String>> conflicts,
-        List<String> nestedJars) {
+        List<String> nestedJars,
+        List<String> mixinConfigs,
+        String accessWidener) {
 }

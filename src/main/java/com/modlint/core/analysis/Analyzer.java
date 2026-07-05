@@ -12,7 +12,11 @@ public final class Analyzer {
             new VersionRangeViolationPass(),
             new DuplicateModIdPass(),
             new DeclaredIncompatibilityPass(),
-            new WrongLoaderPass());
+            new WrongLoaderPass(),
+            new MixinOverlapPass(),
+            new ResourceOverridePass(),
+            new BundledLibraryClashPass(),
+            new AccessWidenerConflictPass());
 
     public List<Finding> analyze(ModSet mods) {
         List<Finding> findings = new ArrayList<>();

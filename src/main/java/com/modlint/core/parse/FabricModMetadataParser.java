@@ -30,7 +30,23 @@ public final class FabricModMetadataParser {
                 relationMap(root, "depends"),
                 relationMap(root, "breaks"),
                 relationMap(root, "conflicts"),
-                nestedJarPaths(root));
+                nestedJarPaths(root),
+                mixinConfigs(root),
+                root.has("accessWidener") ? root.get("accessWidener").getAsString() : null);
+    }
+
+    /** Reads the {@code mixins} section, whose entries are strings or {@code {"config": ...}} objects. */
+    private static List<String> mixinConfigs(JsonObject root) {
+        if (!root.has("mixins")) {
+            return List.of();
+        }
+        List<String> configs = new ArrayList<>();
+        for (JsonElement entry : root.getAsJsonArray("mixins")) {
+            configs.add(entry.isJsonObject()
+                    ? entry.getAsJsonObject().get("config").getAsString()
+                    : entry.getAsString());
+        }
+        return List.copyOf(configs);
     }
 
     /** Reads the {@code jars} section, a list of {@code {"file": "META-INF/jars/..."}} objects. */
