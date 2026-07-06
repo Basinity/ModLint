@@ -22,6 +22,19 @@ public final class JarModReader {
 
     private static final String FABRIC_METADATA_ENTRY = "fabric.mod.json";
 
+    /** No legitimate metadata or nested-jar entry comes close; past this it's a zip bomb. */
+    private static final int MAX_ENTRY_BYTES = 128 * 1024 * 1024;
+
+    private final int maxEntryBytes;
+
+    public JarModReader() {
+        this(MAX_ENTRY_BYTES);
+    }
+
+    JarModReader(int maxEntryBytes) {
+        this.maxEntryBytes = maxEntryBytes;
+    }
+
     /** Metadata entry that marks a jar as targeting a loader, keyed by entry path. */
     private static final Map<String, ModLoader> LOADER_METADATA_ENTRIES = loaderMetadataEntries();
 
@@ -62,7 +75,7 @@ public final class JarModReader {
                 throw new IOException(jar + " has no " + FABRIC_METADATA_ENTRY + " (not a Fabric mod?)");
             }
             try (InputStream in = jarFile.getInputStream(entry)) {
-                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                return new String(readCapped(in, FABRIC_METADATA_ENTRY), StandardCharsets.UTF_8);
             }
         }
     }
@@ -89,7 +102,7 @@ public final class JarModReader {
                 return Optional.empty();
             }
             try (InputStream in = jarFile.getInputStream(entry)) {
-                return Optional.of(in.readAllBytes());
+                return Optional.of(readCapped(in, entryPath));
             }
         }
     }
@@ -102,7 +115,7 @@ public final class JarModReader {
         try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(jarBytes))) {
             for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
                 if (entry.getName().equals(entryPath)) {
-                    return Optional.of(in.readAllBytes());
+                    return Optional.of(readCapped(in, entryPath));
                 }
             }
         }
@@ -113,5 +126,13 @@ public final class JarModReader {
     public Optional<String> readFabricMetadata(byte[] jarBytes) throws IOException {
         return readEntry(jarBytes, FABRIC_METADATA_ENTRY)
                 .map(bytes -> new String(bytes, StandardCharsets.UTF_8));
+    }
+
+    private byte[] readCapped(InputStream in, String entryName) throws IOException {
+        byte[] bytes = in.readNBytes(maxEntryBytes + 1);
+        if (bytes.length > maxEntryBytes) {
+            throw new IOException(entryName + " decompresses past " + maxEntryBytes + " bytes; refusing to read it");
+        }
+        return bytes;
     }
 }

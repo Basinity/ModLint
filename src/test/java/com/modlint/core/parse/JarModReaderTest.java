@@ -72,6 +72,18 @@ class JarModReaderTest {
         assertEquals(Set.of(), reader.detectLoaders(jar));
     }
 
+    @Test
+    void refusesEntriesDecompressingPastTheCap(@TempDir Path dir) throws IOException {
+        JarModReader cappedReader = new JarModReader(1024);
+        Path jar = dir.resolve("bomb.jar");
+        writeJar(jar, "fabric.mod.json", "x".repeat(4096));
+
+        assertThrows(IOException.class, () -> cappedReader.readFabricMetadata(jar));
+        assertThrows(IOException.class, () -> cappedReader.readEntry(jar, "fabric.mod.json"));
+        assertThrows(IOException.class,
+                () -> cappedReader.readEntry(Files.readAllBytes(jar), "fabric.mod.json"));
+    }
+
     private static void writeJar(Path jar, String entryName, String content) throws IOException {
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
             out.putNextEntry(new JarEntry(entryName));

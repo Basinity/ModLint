@@ -56,4 +56,14 @@ class ModsFolderScannerTest {
         assertEquals("inner", inner.id());
         assertEquals("2.0.0", inner.version());
     }
+
+    @Test
+    void capsNestedJarRecursionDepth(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJarWithNestedChain(dir.resolve("deep.jar"), "deep", 8);
+
+        List<ScannedJar> jars = scanner.scan(dir);
+
+        assertEquals("deep", jars.get(0).fabricMod().orElseThrow().id());
+        assertEquals(5, jars.get(0).nestedMods().size());
+    }
 }

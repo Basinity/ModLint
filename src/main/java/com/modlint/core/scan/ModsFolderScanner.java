@@ -63,7 +63,7 @@ public final class ModsFolderScanner {
                 ModInfo mod = parser.parse(reader.readFabricMetadata(jar));
                 fabricMod = Optional.of(mod);
                 for (String nestedPath : mod.nestedJars()) {
-                    reader.readEntry(jar, nestedPath).ifPresent(bytes -> collectNested(bytes, nestedMods));
+                    reader.readEntry(jar, nestedPath).ifPresent(bytes -> collectNested(bytes, nestedMods, 1));
                 }
                 contents = readContents(jar, mod);
             } catch (RuntimeException e) {
@@ -93,8 +93,14 @@ public final class ModsFolderScanner {
         return new JarContents(mixinScanner.scan(jar, mod.mixinConfigs()), resourcePaths, accessWideners);
     }
 
+    /** Real jar-in-jar chains are this shallow; deeper means a crafted jar (e.g. nesting itself). */
+    private static final int MAX_NESTING_DEPTH = 5;
+
     /** Collects the in-memory jar's Fabric mod and recurses into its own nested jars. */
-    private void collectNested(byte[] jarBytes, List<ModInfo> out) {
+    private void collectNested(byte[] jarBytes, List<ModInfo> out, int depth) {
+        if (depth > MAX_NESTING_DEPTH) {
+            return;
+        }
         try {
             Optional<String> metadata = reader.readFabricMetadata(jarBytes);
             if (metadata.isEmpty()) {
@@ -103,7 +109,7 @@ public final class ModsFolderScanner {
             ModInfo mod = parser.parse(metadata.get());
             out.add(mod);
             for (String nestedPath : mod.nestedJars()) {
-                reader.readEntry(jarBytes, nestedPath).ifPresent(bytes -> collectNested(bytes, out));
+                reader.readEntry(jarBytes, nestedPath).ifPresent(bytes -> collectNested(bytes, out, depth + 1));
             }
         } catch (IOException | RuntimeException e) {
             // A broken nested jar never fails the scan; its ids simply don't count as present.
