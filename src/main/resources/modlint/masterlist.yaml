@@ -1,0 +1,30 @@
+# ModLint masterlist: known-bad mod combinations that metadata alone does not reveal.
+# A rule fires when every mod under 'mods' is installed in a version matching its range
+# ("*" = any version; ranges use fabric.mod.json predicate syntax).
+# Contributions welcome via pull request; keep entries to combinations that are
+# documented or reproducible, and say what to do instead in 'fix'.
+
+rules:
+  - id: starlight-phosphor
+    mods:
+      starlight: "*"
+      phosphor: "*"
+    severity: high
+    problem: "Starlight and Phosphor both replace the vanilla lighting engine; running both is unsupported and causes lighting corruption or crashes."
+    fix: "Keep Starlight and remove Phosphor (Starlight supersedes it)."
+
+  - id: optifabric-sodium
+    mods:
+      optifabric: "*"
+      sodium: "*"
+    severity: high
+    problem: "OptiFine (via OptiFabric) and Sodium patch the same renderer internals and are famously incompatible."
+    fix: "Remove OptiFabric; use Sodium with Iris for shaders instead of OptiFine."
+
+  - id: quilted-fabric-api-with-fabric-api
+    mods:
+      quilted_fabric_api: "*"
+      fabric-api: "*"
+    severity: high
+    problem: "Quilted Fabric API replaces Fabric API on Quilt; installing both provides the same modules twice and breaks module resolution."
+    fix: "Keep exactly one: Fabric API on Fabric, Quilted Fabric API on Quilt."

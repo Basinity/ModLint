@@ -7,11 +7,14 @@ import com.modlint.core.analysis.ModSet;
 import com.modlint.core.analysis.Severity;
 import com.modlint.core.model.ScannedJar;
 import com.modlint.core.report.Report;
+import com.modlint.core.rules.Rule;
+import com.modlint.core.rules.RulesLoader;
 import com.modlint.core.scan.ModsFolderScanner;
 import com.modlint.core.scan.MrpackInput;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -45,6 +48,10 @@ public final class ModLintCommand implements Callable<Integer> {
                     + "Defaults to .modlintignore next to the target, when present.")
     private Path ignoreFile;
 
+    @Option(names = "--rules", paramLabel = "<file>",
+            description = "Extra masterlist YAML of known-bad combinations, added to the bundled one.")
+    private Path rulesFile;
+
     public static void main(String[] args) {
         System.exit(new CommandLine(new ModLintCommand()).execute(args));
     }
@@ -63,8 +70,12 @@ public final class ModLintCommand implements Callable<Integer> {
             return 2;
         }
 
+        List<Rule> rules = new ArrayList<>(RulesLoader.loadBundled());
+        if (rulesFile != null) {
+            rules.addAll(RulesLoader.load(rulesFile));
+        }
         List<ScannedJar> jars = new ModsFolderScanner().scan(modsFolder);
-        List<Finding> findings = new Analyzer().analyze(new ModSet(jars, minecraftVersion));
+        List<Finding> findings = new Analyzer(rules).analyze(new ModSet(jars, minecraftVersion));
         IgnoreRules ignore = loadIgnoreRules();
         List<Finding> reported = findings.stream().filter(finding -> !ignore.ignores(finding)).toList();
         Report report = Report.of(jars, minecraftVersion, reported);

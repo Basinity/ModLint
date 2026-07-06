@@ -100,6 +100,27 @@ class ModLintCommandTest {
     }
 
     @Test
+    void extraRulesFileFiresItsRule(@TempDir Path dir) throws IOException {
+        packMissingDependencyFolder(dir); // provides iris 1.7.6
+        Path rules = dir.resolve("rules.yaml");
+        Files.writeString(rules, """
+                rules:
+                  - id: iris-test-rule
+                    mods: { iris: "1.7.x" }
+                    severity: low
+                    problem: "Test rule matched iris."
+                    fix: "Do the thing."
+                """);
+
+        Run run = run(dir.toString(), "--rules", rules.toString());
+
+        assertEquals(1, run.exitCode());
+        assertTrue(run.stdout().contains("known-bad-combination"));
+        assertTrue(run.stdout().contains("iris-test-rule"));
+        assertTrue(run.stdout().contains("Fix: Do the thing."));
+    }
+
+    @Test
     void mrpackIsExtractedAndItsMinecraftVersionIsUsed(@TempDir Path dir) throws IOException {
         // An offline pack: no remote files, one override jar (iris pins minecraft 1.20.1),
         // and an index declaring Minecraft 1.21.1, which must trigger the range check.
