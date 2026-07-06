@@ -18,9 +18,17 @@ class KnownBadCombinationPassTest {
 
     private static final Rule RULE = new Rule("a-b-clash",
             Map.of("moda", List.of("*"), "modb", List.of("<2.0.0")),
+            List.of(),
             Severity.HIGH,
             "moda corrupts modb worlds.",
             "Update modb to 2.0.0 or newer.");
+
+    private static final Rule COMPANION_RULE = new Rule("a-needs-c",
+            Map.of("moda", List.of("*")),
+            List.of("modc"),
+            Severity.HIGH,
+            "moda breaks without modc.",
+            "Install modc.");
 
     private ModSet scan(Path dir) throws IOException {
         return new ModSet(new ModsFolderScanner().scan(dir), Optional.empty());
@@ -55,5 +63,14 @@ class KnownBadCombinationPassTest {
         SyntheticJars.writeFabricJar(dir.resolve("moda.jar"), "moda", "1.0.0");
 
         assertTrue(new KnownBadCombinationPass(List.of(RULE)).analyze(scan(dir)).isEmpty());
+    }
+
+    @Test
+    void missingCompanionRuleFiresOnlyWhileTheCompanionIsAbsent(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJar(dir.resolve("moda.jar"), "moda", "1.0.0");
+        assertEquals(1, new KnownBadCombinationPass(List.of(COMPANION_RULE)).analyze(scan(dir)).size());
+
+        SyntheticJars.writeFabricJar(dir.resolve("modc.jar"), "modc", "1.0.0");
+        assertTrue(new KnownBadCombinationPass(List.of(COMPANION_RULE)).analyze(scan(dir)).isEmpty());
     }
 }

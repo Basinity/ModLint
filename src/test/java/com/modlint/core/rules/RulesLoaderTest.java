@@ -28,9 +28,25 @@ class RulesLoaderTest {
         Rule rule = rules.get(0);
         assertEquals("a-b-clash", rule.id());
         assertEquals(Map.of("moda", List.of(">=2.0.0"), "modb", List.of("1.x", "2.x")), rule.mods());
+        assertEquals(List.of(), rule.absent());
         assertEquals(Severity.MEDIUM, rule.severity());
         assertEquals("They clash.", rule.problem());
         assertEquals("Remove one.", rule.fix());
+    }
+
+    @Test
+    void parsesAnAbsentList() {
+        List<Rule> rules = RulesLoader.parse("""
+                rules:
+                  - id: needs-companion
+                    mods: { moda: "*" }
+                    absent: [modc, modd]
+                    severity: high
+                    problem: "p"
+                    fix: "f"
+                """);
+
+        assertEquals(List.of("modc", "modd"), rules.get(0).absent());
     }
 
     @Test

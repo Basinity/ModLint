@@ -40,6 +40,11 @@ public final class KnownBadCombinationPass implements AnalysisPass {
                 return false;
             }
         }
+        for (String id : rule.absent()) {
+            if (!mods.providersOf(id).isEmpty()) {
+                return false;
+            }
+        }
         return true;
     }
 }

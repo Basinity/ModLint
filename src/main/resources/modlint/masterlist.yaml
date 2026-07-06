@@ -1,6 +1,7 @@
 # ModLint masterlist: known-bad mod combinations that metadata alone does not reveal.
 # A rule fires when every mod under 'mods' is installed in a version matching its range
-# ("*" = any version; ranges use fabric.mod.json predicate syntax).
+# ("*" = any version; ranges use fabric.mod.json predicate syntax) and none of the ids
+# under 'absent' is installed — 'absent' expresses missing-companion rules.
 # Contributions welcome via pull request; keep entries to combinations that are
 # documented or reproducible, and say what to do instead in 'fix'.
 
@@ -28,3 +29,29 @@ rules:
     severity: high
     problem: "Quilted Fabric API replaces Fabric API on Quilt; installing both provides the same modules twice and breaks module resolution."
     fix: "Keep exactly one: Fabric API on Fabric, Quilted Fabric API on Quilt."
+
+  - id: viafabric-with-viafabricplus
+    mods:
+      viafabric: "*"
+      viafabricplus: "*"
+    severity: high
+    problem: "ViaFabric and ViaFabricPlus both wrap the network protocol translation layer; the ViaFabric documentation states they cannot be used together."
+    fix: "Keep exactly one of the two protocol translators."
+
+  - id: immersive-portals-optifabric
+    mods:
+      immersive_portals: "*"
+      optifabric: "*"
+    severity: high
+    problem: "Immersive Portals is documented as incompatible with OptiFine (loaded via OptiFabric) on Minecraft 1.18 and newer; portal rendering breaks."
+    fix: "Remove OptiFabric; use Sodium with Iris alongside Immersive Portals instead."
+
+  - id: continuity-old-sodium-without-indium
+    mods:
+      continuity: "*"
+      sodium: "<0.6.0"
+    absent:
+      - indium
+    severity: high
+    problem: "Sodium below 0.6.0 does not implement the Fabric Rendering API that Continuity renders through, so connected textures silently fail or crash without the Indium bridge."
+    fix: "Install Indium, or update Sodium to 0.6.0 or newer."

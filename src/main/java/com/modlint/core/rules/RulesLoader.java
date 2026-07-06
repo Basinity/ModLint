@@ -64,13 +64,18 @@ public final class RulesLoader {
         for (Map.Entry<?, ?> condition : modsMap.entrySet()) {
             mods.put(condition.getKey().toString(), ranges(id, condition.getValue()));
         }
+        List<String> absent = List.of();
+        if (entry.get("absent") instanceof List<?> absentList) {
+            absent = absentList.stream().map(Object::toString).toList();
+        }
         Severity severity;
         try {
             severity = Severity.valueOf(requireString(entry, "severity").toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Rule '" + id + "' has an unknown severity");
         }
-        return new Rule(id, Map.copyOf(mods), severity, requireString(entry, "problem"), requireString(entry, "fix"));
+        return new Rule(id, Map.copyOf(mods), absent, severity,
+                requireString(entry, "problem"), requireString(entry, "fix"));
     }
 
     private static List<String> ranges(String ruleId, Object value) {
