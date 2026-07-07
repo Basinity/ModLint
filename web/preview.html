@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ModLint — report preview (dev only)</title>
+  </head>
+  <body>
+    <header class="site-head">
+      <a class="wordmark" href="/">MODLINT</a>
+      <button id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
+    </header>
+    <main>
+      <section class="analyzer" aria-label="Report preview">
+        <section id="report" aria-label="Analysis report"></section>
+      </section>
+    </main>
+    <script type="module" src="/src/preview.ts"></script>
+  </body>
+</html>

@@ -1,6 +1,10 @@
 .gradle/
 build/
 
+# Web front-end
+web/node_modules/
+web/dist/
+
 # IDE
 .idea/
 *.iml

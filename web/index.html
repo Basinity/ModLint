@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ModLint — find mod conflicts before the game does</title>
+    <meta
+      name="description"
+      content="Static analysis for Fabric mods folders: missing dependencies, version conflicts, Mixin overlaps, resource overrides, and known-bad combinations — checked before launch."
+    />
+    <script>
+      const queryTheme = new URLSearchParams(location.search).get("theme");
+      const storedTheme = queryTheme ?? localStorage.getItem("modlint-theme");
+      if (storedTheme) document.documentElement.dataset.theme = storedTheme;
+    </script>
+  </head>
+  <body>
+    <header class="site-head">
+      <a class="wordmark" href="/">MODLINT</a>
+      <button id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Find mod conflicts <span class="accent">before the game does.</span></h1>
+        <p class="lede">
+          ModLint reads a Fabric mods folder and reports what will break it: missing dependencies,
+          version range violations, wrong-loader jars, Mixin overlaps, silent resource overrides,
+          clashing bundled libraries, and known-bad combinations. The jars are read statically and
+          discarded with the report.
+        </p>
+      </section>
+
+      <section class="analyzer" aria-label="Analyze a mods folder">
+        <form id="upload-form">
+          <div id="drop-zone" tabindex="0" role="button"
+               aria-label="Drop mod jars or a zip of your mods folder, or press Enter to browse">
+            <p class="dz-main">Drop your mods folder here</p>
+            <p class="dz-sub">
+              .jar files or a .zip of the folder, or
+              <button type="button" id="pick-files" class="linklike">browse instead</button>
+            </p>
+            <p class="dz-note" id="dz-note">analyzed in memory · never stored · up to 500 jars</p>
+            <div class="scanline" aria-hidden="true"></div>
+          </div>
+          <input id="file-input" type="file" multiple accept=".jar,.zip" hidden />
+          <div class="controls">
+            <label class="mc-field">
+              <span>Minecraft version</span>
+              <input id="mc-version" type="text" placeholder="1.20.1" size="8"
+                     autocomplete="off" spellcheck="false" />
+              <span class="hint">optional, checks each mod's declared range</span>
+            </label>
+            <button id="analyze" class="primary" type="submit" disabled>Analyze mods</button>
+          </div>
+        </form>
+        <div id="status" role="status" aria-live="polite"></div>
+        <section id="report" aria-label="Analysis report" hidden></section>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <p>
+        Static analysis only: ModLint reads jar metadata and bytecode, it never runs mod code.
+        Uploads are analyzed in memory and discarded with the report.
+      </p>
+      <p class="foot-meta">a <a href="https://basinity.com">basinity.com</a> tool · the CLI also takes .mrpack files</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
