@@ -17,9 +17,12 @@
   <body>
     <header class="site-head">
       <a class="wordmark" href="/">MODLINT</a>
-      <button id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
-        <span class="theme-icon" aria-hidden="true"></span>
-      </button>
+      <nav class="head-actions">
+        <a class="ghost-button" href="https://github.com/Basinity/ModLint/issues">Report a bug</a>
+        <button id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
+          <span class="theme-icon" aria-hidden="true"></span>
+        </button>
+      </nav>
     </header>
 
     <main>
@@ -66,7 +69,11 @@
         Static analysis only: ModLint reads jar metadata and bytecode, it never runs mod code.
         Uploads are analyzed in memory and discarded with the report.
       </p>
-      <p class="foot-meta">a <a href="https://basinity.com">basinity.com</a> tool · the CLI also takes .mrpack files</p>
+      <p class="foot-meta">
+        a tool by <a href="https://github.com/Basinity">Basinity</a> ·
+        <a href="https://github.com/Basinity/ModLint">source on GitHub</a> ·
+        the CLI also takes .mrpack files
+      </p>
     </footer>
 
     <script type="module" src="/src/main.ts"></script>

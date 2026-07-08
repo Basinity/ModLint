@@ -112,6 +112,31 @@ main {
   flex: none;
 }
 
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ghost-button {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.4rem 0.75rem;
+  background: var(--surface);
+}
+
+.ghost-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 #theme-toggle {
   width: 2rem;
   height: 2rem;
