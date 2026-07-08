@@ -63,6 +63,46 @@ class AnalysisPassesTest {
     }
 
     @Test
+    void declaredBreaksIgnoresANestedCopyTheLoaderWouldNotLoad(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJar(dir.resolve("sodium.jar"), "sodium", "0.8.13",
+                ", \"breaks\": { \"fabric-api\": \"<0.140.0\" }");
+        SyntheticJars.writeFabricJar(dir.resolve("fabric-api.jar"), "fabric-api", "0.141.4");
+        SyntheticJars.writeFabricJarWithNested(dir.resolve("distanthorizons.jar"),
+                "distanthorizons", "3.2.0", "fabric-api", "0.139.4");
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
+
+        assertTrue(new DeclaredIncompatibilityPass().analyze(mods).isEmpty());
+    }
+
+    @Test
+    void declaredBreaksFiresWhenTheWinningVersionMatches(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJar(dir.resolve("sodium.jar"), "sodium", "0.8.13",
+                ", \"breaks\": { \"fabric-api\": \"<0.140.0\" }");
+        SyntheticJars.writeFabricJar(dir.resolve("fabric-api.jar"), "fabric-api", "0.139.4");
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
+
+        List<Finding> findings = new DeclaredIncompatibilityPass().analyze(mods);
+
+        assertEquals(1, findings.size());
+        assertEquals(List.of("sodium", "fabric-api"), findings.get(0).mods());
+    }
+
+    @Test
+    void versionRangeIsCheckedAgainstTheWinningVersionOnly(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJar(dir.resolve("mymod.jar"), "mymod", "1.0.0",
+                ", \"depends\": { \"foo\": \"<2.0.0\" }");
+        SyntheticJars.writeFabricJar(dir.resolve("foo.jar"), "foo", "1.0.0");
+        SyntheticJars.writeFabricJarWithNested(dir.resolve("bundler.jar"), "bundler", "1.0.0", "foo", "2.5.0");
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
+
+        List<Finding> findings = new VersionRangeViolationPass().analyze(mods);
+
+        assertEquals(1, findings.size());
+        assertEquals(List.of("mymod", "foo"), findings.get(0).mods());
+        assertTrue(findings.get(0).problem().contains("2.5.0"));
+    }
+
+    @Test
     void wrongLoaderFixtureIsFlagged(@TempDir Path dir) throws IOException {
         ModSet mods = scanFixtures(dir, "wrong-loader", "jei-1.20.1-forge-15.20.0.130");
 

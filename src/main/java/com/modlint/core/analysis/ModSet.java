@@ -2,7 +2,7 @@ package com.modlint.core.analysis;
 
 import com.modlint.core.model.ModInfo;
 import com.modlint.core.model.ScannedJar;
-import java.util.ArrayList;
+import com.modlint.core.version.VersionRanges;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,8 @@ import java.util.Set;
 /**
  * The scanned mods folder indexed for analysis: every id that counts as present (top-level
  * mods, their {@code provides} aliases, nested jar-in-jar mods and their aliases) mapped to
- * the versions providing it.
+ * the provider the loader would resolve it to. When the same id is provided more than once,
+ * Fabric Loader loads only the highest version, so version checks see just that winner.
  */
 public final class ModSet {
 
@@ -27,7 +28,7 @@ public final class ModSet {
     }
 
     private final List<ScannedJar> jars;
-    private final Map<String, List<Provider>> providers = new LinkedHashMap<>();
+    private final Map<String, Provider> providers = new LinkedHashMap<>();
     private final Optional<String> minecraftVersion;
 
     public ModSet(List<ScannedJar> jars, Optional<String> minecraftVersion) {
@@ -48,8 +49,9 @@ public final class ModSet {
         }
     }
 
-    private void index(String id, Provider provider) {
-        providers.computeIfAbsent(id, key -> new ArrayList<>()).add(provider);
+    private void index(String id, Provider candidate) {
+        providers.merge(id, candidate, (current, added) ->
+                VersionRanges.isNewer(added.version(), current.version()) ? added : current);
     }
 
     public List<ScannedJar> jars() {
@@ -61,9 +63,9 @@ public final class ModSet {
         return jars.stream().flatMap(jar -> jar.fabricMod().stream()).toList();
     }
 
-    /** Everything providing {@code id}, in scan order; empty when the id is absent. */
-    public List<Provider> providersOf(String id) {
-        return providers.getOrDefault(id, List.of());
+    /** The provider the loader would resolve {@code id} to, or empty when the id is absent. */
+    public Optional<Provider> providerOf(String id) {
+        return Optional.ofNullable(providers.get(id));
     }
 
     public Optional<String> minecraftVersion() {
@@ -72,6 +74,6 @@ public final class ModSet {
 
     /** True when a cross-loader compatibility layer (Kilt, Sinytra Connector) is installed. */
     public boolean hasCompatLayer() {
-        return COMPAT_LAYER_IDS.stream().anyMatch(id -> !providersOf(id).isEmpty());
+        return COMPAT_LAYER_IDS.stream().anyMatch(id -> providerOf(id).isPresent());
     }
 }

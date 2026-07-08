@@ -16,8 +16,13 @@ public final class SyntheticJars {
 
     /** Writes a jar whose {@code fabric.mod.json} declares just an id and version. */
     public static void writeFabricJar(Path jar, String id, String version) throws IOException {
+        writeFabricJar(jar, id, version, "");
+    }
+
+    /** Writes a jar whose {@code fabric.mod.json} carries extra JSON after id and version. */
+    public static void writeFabricJar(Path jar, String id, String version, String extraJson) throws IOException {
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
-            writeMetadata(out, metadata(id, version, ""));
+            writeMetadata(out, metadata(id, version, extraJson));
         }
     }
 

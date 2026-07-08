@@ -39,4 +39,17 @@ public final class VersionRanges {
         }
         return !anyParsed;
     }
+
+    /**
+     * True when {@code candidate} parses as a newer version than {@code current}, using
+     * fabric-loader's comparison. False when either fails to parse, so an unparseable
+     * version never displaces one that parses.
+     */
+    public static boolean isNewer(String candidate, String current) {
+        try {
+            return Version.parse(candidate).compareTo(Version.parse(current)) > 0;
+        } catch (VersionParsingException e) {
+            return false;
+        }
+    }
 }

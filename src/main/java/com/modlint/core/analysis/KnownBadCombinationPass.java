@@ -34,14 +34,15 @@ public final class KnownBadCombinationPass implements AnalysisPass {
 
     private static boolean matches(Rule rule, ModSet mods) {
         for (Map.Entry<String, List<String>> condition : rule.mods().entrySet()) {
-            boolean satisfied = mods.providersOf(condition.getKey()).stream()
-                    .anyMatch(provider -> VersionRanges.satisfies(provider.version(), condition.getValue()));
+            boolean satisfied = mods.providerOf(condition.getKey())
+                    .filter(provider -> VersionRanges.satisfies(provider.version(), condition.getValue()))
+                    .isPresent();
             if (!satisfied) {
                 return false;
             }
         }
         for (String id : rule.absent()) {
-            if (!mods.providersOf(id).isEmpty()) {
+            if (mods.providerOf(id).isPresent()) {
                 return false;
             }
         }

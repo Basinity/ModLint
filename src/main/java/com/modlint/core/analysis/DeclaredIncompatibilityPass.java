@@ -27,17 +27,16 @@ public final class DeclaredIncompatibilityPass implements AnalysisPass {
         for (Map.Entry<String, List<String>> entry : relation.entrySet()) {
             String targetId = entry.getKey();
             List<String> ranges = entry.getValue();
-            for (ModSet.Provider provider : mods.providersOf(targetId)) {
-                if (provider.modId().equals(mod.id()) || !VersionRanges.satisfies(provider.version(), ranges)) {
-                    continue;
-                }
-                findings.add(new Finding("declared-incompatibility", severity,
-                        List.of(mod.id(), targetId),
-                        mod.name() + " declares it " + verb + " " + targetId + " " + ranges
-                                + ", and the installed version " + provider.version() + " matches.",
-                        "Update " + targetId + " out of the declared range, or remove one of the two mods."));
-                break; // One finding per declared relation is enough.
+            ModSet.Provider provider = mods.providerOf(targetId).orElse(null);
+            if (provider == null || provider.modId().equals(mod.id())
+                    || !VersionRanges.satisfies(provider.version(), ranges)) {
+                continue;
             }
+            findings.add(new Finding("declared-incompatibility", severity,
+                    List.of(mod.id(), targetId),
+                    mod.name() + " declares it " + verb + " " + targetId + " " + ranges
+                            + ", and the installed version " + provider.version() + " matches.",
+                    "Update " + targetId + " out of the declared range, or remove one of the two mods."));
         }
     }
 }

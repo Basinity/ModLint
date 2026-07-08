@@ -14,7 +14,7 @@ public final class MissingDependencyPass implements AnalysisPass {
         for (ModInfo mod : mods.topLevelMods()) {
             for (Map.Entry<String, List<String>> dependency : mod.depends().entrySet()) {
                 String depId = dependency.getKey();
-                if (ModSet.PLATFORM_IDS.contains(depId) || !mods.providersOf(depId).isEmpty()) {
+                if (ModSet.PLATFORM_IDS.contains(depId) || mods.providerOf(depId).isPresent()) {
                     continue;
                 }
                 findings.add(new Finding("missing-dependency", Severity.HIGH,

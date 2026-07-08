@@ -18,16 +18,15 @@ public final class VersionRangeViolationPass implements AnalysisPass {
         for (ModInfo mod : mods.topLevelMods()) {
             for (Map.Entry<String, List<String>> dependency : mod.depends().entrySet()) {
                 String depId = dependency.getKey();
-                List<ModSet.Provider> providers = mods.providersOf(depId);
-                if (providers.isEmpty()) {
+                ModSet.Provider provider = mods.providerOf(depId).orElse(null);
+                if (provider == null) {
                     continue; // Absent entirely: the missing-dependency pass owns that.
                 }
                 List<String> ranges = dependency.getValue();
-                if (providers.stream().anyMatch(provider -> VersionRanges.satisfies(provider.version(), ranges))) {
+                if (VersionRanges.satisfies(provider.version(), ranges)) {
                     continue;
                 }
-                String found = providers.stream().map(ModSet.Provider::version).distinct()
-                        .reduce((a, b) -> a + ", " + b).orElseThrow();
+                String found = provider.version();
                 findings.add(new Finding("version-range-violation", Severity.HIGH,
                         List.of(mod.id(), depId),
                         mod.name() + " requires " + depId + " " + ranges + ", but the installed version is "
