@@ -43,6 +43,16 @@ public final class SyntheticJars {
         }
     }
 
+    /** Writes a jar carrying only Forge metadata. */
+    public static void writeForgeJar(Path jar, String id) throws IOException {
+        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
+            out.putNextEntry(new JarEntry("META-INF/mods.toml"));
+            out.write(("modLoader=\"javafml\"\n[[mods]]\nmodId=\"" + id + "\"\n")
+                    .getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+    }
+
     /** Writes a jar whose nested jars chain {@code depth} levels deep (ids {@code id-1} … {@code id-depth}). */
     public static void writeFabricJarWithNestedChain(Path jar, String id, int depth) throws IOException {
         byte[] child = null;

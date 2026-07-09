@@ -1,6 +1,7 @@
 package com.modlint.core.analysis;
 
 import com.modlint.core.model.ModInfo;
+import com.modlint.core.model.ModLoader;
 import com.modlint.core.model.ScannedJar;
 import com.modlint.core.version.VersionRanges;
 import java.util.LinkedHashMap;
@@ -19,6 +20,13 @@ public final class ModSet {
 
     /** Ids the platform itself provides; they are never reported missing. */
     public static final Set<String> PLATFORM_IDS = Set.of("minecraft", "java", "fabricloader");
+
+    /**
+     * Ids fabric-loader itself bundles and registers, in a version tied to the loader install
+     * rather than the mods folder. Stale nested copies lose to the loader's own, so neither
+     * absence nor a version range can be judged from the folder alone.
+     */
+    public static final Set<String> LOADER_BUNDLED_IDS = Set.of("mixinextras");
 
     /** Mod ids of Forge-on-Fabric / Fabric-on-Forge compatibility layers. */
     private static final Set<String> COMPAT_LAYER_IDS = Set.of("kilt", "connector");
@@ -75,5 +83,26 @@ public final class ModSet {
     /** True when a cross-loader compatibility layer (Kilt, Sinytra Connector) is installed. */
     public boolean hasCompatLayer() {
         return COMPAT_LAYER_IDS.stream().anyMatch(id -> providerOf(id).isPresent());
+    }
+
+    /** Fewer foreign jars than this stay individual findings; a pack-level call needs a quorum. */
+    private static final int FOREIGN_PACK_MIN = 3;
+
+    /**
+     * True when jars targeting other loaders outnumber the Fabric mods: the folder belongs to
+     * a Forge/NeoForge pack, so Fabric-side dependency analysis has no valid premise (its jars
+     * run through a compatibility layer whose Forge side this scan cannot read).
+     */
+    public boolean foreignDominant() {
+        long fabric = jars.stream().filter(jar -> jar.fabricMod().isPresent()).count();
+        long foreign = foreignJarCount();
+        return foreign >= FOREIGN_PACK_MIN && foreign > fabric;
+    }
+
+    /** The jars with mod metadata for other loaders only. */
+    public long foreignJarCount() {
+        return jars.stream()
+                .filter(jar -> !jar.loaders().isEmpty() && !jar.loaders().contains(ModLoader.FABRIC))
+                .count();
     }
 }

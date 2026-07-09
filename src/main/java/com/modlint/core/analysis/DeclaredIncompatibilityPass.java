@@ -14,6 +14,9 @@ public final class DeclaredIncompatibilityPass implements AnalysisPass {
 
     @Override
     public List<Finding> analyze(ModSet mods) {
+        if (mods.foreignDominant()) {
+            return List.of(); // A Forge-pack folder: the versions that load are not the folder's to judge.
+        }
         List<Finding> findings = new ArrayList<>();
         for (ModInfo mod : mods.topLevelMods()) {
             collect(mods, mod, mod.breaks(), "breaks", Severity.HIGH, findings);
@@ -26,6 +29,9 @@ public final class DeclaredIncompatibilityPass implements AnalysisPass {
                                 String verb, Severity severity, List<Finding> findings) {
         for (Map.Entry<String, List<String>> entry : relation.entrySet()) {
             String targetId = entry.getKey();
+            if (ModSet.LOADER_BUNDLED_IDS.contains(targetId)) {
+                continue; // The loader's own copy wins, and its version isn't in the folder.
+            }
             List<String> ranges = entry.getValue();
             ModSet.Provider provider = mods.providerOf(targetId).orElse(null);
             if (provider == null || provider.modId().equals(mod.id())

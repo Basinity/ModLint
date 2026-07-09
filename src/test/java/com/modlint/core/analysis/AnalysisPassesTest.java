@@ -103,6 +103,35 @@ class AnalysisPassesTest {
     }
 
     @Test
+    void loaderBundledMixinExtrasIsNeverMissingOrOutOfRange(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeFabricJar(dir.resolve("usermod.jar"), "usermod", "1.0.0",
+                ", \"depends\": { \"mixinextras\": \">=0.5.0\" }");
+        SyntheticJars.writeFabricJarWithNested(dir.resolve("bundler.jar"),
+                "bundler", "1.0.0", "mixinextras", "0.4.1");
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
+
+        assertTrue(new MissingDependencyPass().analyze(mods).isEmpty());
+        assertTrue(new VersionRangeViolationPass().analyze(mods).isEmpty());
+    }
+
+    @Test
+    void forgePackFolderYieldsOneFindingInsteadOfPerJarNoise(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeForgeJar(dir.resolve("a.jar"), "forgemoda");
+        SyntheticJars.writeForgeJar(dir.resolve("b.jar"), "forgemodb");
+        SyntheticJars.writeForgeJar(dir.resolve("c.jar"), "forgemodc");
+        SyntheticJars.writeFabricJar(dir.resolve("fabricmod.jar"), "fabricmod", "1.0.0",
+                ", \"depends\": { \"somelib\": \">=1.0.0\" }");
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
+
+        List<Finding> wrongLoader = new WrongLoaderPass().analyze(mods);
+        assertEquals(1, wrongLoader.size());
+        assertEquals("not-a-fabric-pack", wrongLoader.get(0).type());
+        assertEquals(Severity.MEDIUM, wrongLoader.get(0).severity());
+        assertTrue(new MissingDependencyPass().analyze(mods).isEmpty());
+        assertTrue(new DeclaredIncompatibilityPass().analyze(mods).isEmpty());
+    }
+
+    @Test
     void wrongLoaderFixtureIsFlagged(@TempDir Path dir) throws IOException {
         ModSet mods = scanFixtures(dir, "wrong-loader", "jei-1.20.1-forge-15.20.0.130");
 

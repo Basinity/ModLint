@@ -14,10 +14,16 @@ public final class VersionRangeViolationPass implements AnalysisPass {
 
     @Override
     public List<Finding> analyze(ModSet mods) {
+        if (mods.foreignDominant()) {
+            return List.of(); // A Forge-pack folder: the versions that load are not the folder's to judge.
+        }
         List<Finding> findings = new ArrayList<>();
         for (ModInfo mod : mods.topLevelMods()) {
             for (Map.Entry<String, List<String>> dependency : mod.depends().entrySet()) {
                 String depId = dependency.getKey();
+                if (ModSet.LOADER_BUNDLED_IDS.contains(depId)) {
+                    continue; // The loader's own copy wins, and its version isn't in the folder.
+                }
                 ModSet.Provider provider = mods.providerOf(depId).orElse(null);
                 if (provider == null) {
                     continue; // Absent entirely: the missing-dependency pass owns that.
