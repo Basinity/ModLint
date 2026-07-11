@@ -45,10 +45,54 @@ public final class SyntheticJars {
 
     /** Writes a jar carrying only Forge metadata. */
     public static void writeForgeJar(Path jar, String id) throws IOException {
+        writeTomlJar(jar, "META-INF/mods.toml",
+                "modLoader=\"javafml\"\n[[mods]]\nmodId=\"" + id + "\"\n");
+    }
+
+    /** Writes a jar carrying the given TOML at the given metadata entry, and nothing else. */
+    public static void writeTomlJar(Path jar, String metadataEntry, String toml) throws IOException {
+        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
+            out.putNextEntry(new JarEntry(metadataEntry));
+            out.write(toml.getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+    }
+
+    /** A minimal mods.toml declaring one mod with a version and the given extra TOML after it. */
+    public static String forgeToml(String id, String version, String extraToml) {
+        return "modLoader=\"javafml\"\nloaderVersion=\"[47,)\"\nlicense=\"MIT\"\n"
+                + "[[mods]]\nmodId=\"" + id + "\"\nversion=\"" + version + "\"\n" + extraToml;
+    }
+
+    /** One {@code [[dependencies.<id>]]} table in Forge's mandatory=true style. */
+    public static String forgeDependency(String modId, String depId, String versionRange) {
+        return "[[dependencies." + modId + "]]\nmodId=\"" + depId + "\"\nmandatory=true\n"
+                + (versionRange == null ? "" : "versionRange=\"" + versionRange + "\"\n")
+                + "side=\"BOTH\"\n";
+    }
+
+    /** Writes a Forge jar bundling one nested jar-in-jar mod via {@code META-INF/jarjar/metadata.json}. */
+    public static void writeForgeJarWithJarJar(Path jar, String id, String version,
+                                               String nestedId, String nestedVersion) throws IOException {
+        String nestedPath = "META-INF/jarjar/" + nestedId + ".jar";
+        ByteArrayOutputStream nestedBytes = new ByteArrayOutputStream();
+        try (JarOutputStream nested = new JarOutputStream(nestedBytes)) {
+            nested.putNextEntry(new JarEntry("META-INF/mods.toml"));
+            nested.write(forgeToml(nestedId, nestedVersion, "").getBytes(StandardCharsets.UTF_8));
+            nested.closeEntry();
+        }
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
             out.putNextEntry(new JarEntry("META-INF/mods.toml"));
-            out.write(("modLoader=\"javafml\"\n[[mods]]\nmodId=\"" + id + "\"\n")
+            out.write(forgeToml(id, version, "").getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+            out.putNextEntry(new JarEntry("META-INF/jarjar/metadata.json"));
+            out.write(("{\"jars\":[{\"identifier\":{\"group\":\"test\",\"artifact\":\"" + nestedId
+                    + "\"},\"version\":{\"range\":\"[" + nestedVersion + ",)\",\"artifactVersion\":\""
+                    + nestedVersion + "\"},\"path\":\"" + nestedPath + "\"}]}")
                     .getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+            out.putNextEntry(new JarEntry(nestedPath));
+            out.write(nestedBytes.toByteArray());
             out.closeEntry();
         }
     }

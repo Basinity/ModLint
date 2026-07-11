@@ -13,7 +13,9 @@ public final class DuplicateModIdPass implements AnalysisPass {
     public List<Finding> analyze(ModSet mods) {
         Map<String, List<ScannedJar>> byId = new LinkedHashMap<>();
         for (ScannedJar jar : mods.jars()) {
-            jar.fabricMod().ifPresent(mod -> byId.computeIfAbsent(mod.id(), key -> new ArrayList<>()).add(jar));
+            for (var mod : mods.nativeMods(jar)) {
+                byId.computeIfAbsent(mod.id(), key -> new ArrayList<>()).add(jar);
+            }
         }
         List<Finding> findings = new ArrayList<>();
         for (Map.Entry<String, List<ScannedJar>> entry : byId.entrySet()) {

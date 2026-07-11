@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.modlint.core.model.ModInfo;
+import com.modlint.core.model.ModLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,7 +26,7 @@ public final class FabricModMetadataParser {
         String id = requireString(root, "id");
         String version = requireString(root, "version");
         String name = root.has("name") ? root.get("name").getAsString() : id;
-        return new ModInfo(id, version, name,
+        return new ModInfo(ModLoader.FABRIC, id, version, name,
                 stringList(root, "provides"),
                 relationMap(root, "depends"),
                 relationMap(root, "breaks"),

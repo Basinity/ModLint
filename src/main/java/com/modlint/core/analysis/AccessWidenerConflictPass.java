@@ -21,7 +21,7 @@ public final class AccessWidenerConflictPass implements AnalysisPass {
     public List<Finding> analyze(ModSet mods) {
         Map<String, Map<String, Set<String>>> accessesByModByMember = new LinkedHashMap<>();
         for (ScannedJar jar : mods.jars()) {
-            jar.fabricMod().ifPresent(mod -> {
+            mods.primaryMod(jar).ifPresent(mod -> {
                 for (AccessWidenerEntry entry : jar.contents().accessWideners()) {
                     accessesByModByMember
                             .computeIfAbsent(entry.member(), key -> new LinkedHashMap<>())

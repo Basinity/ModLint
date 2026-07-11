@@ -3,6 +3,7 @@ package com.modlint.core.analysis;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.modlint.core.model.ModLoader;
 import com.modlint.core.model.ScannedJar;
 import com.modlint.core.scan.ModsFolderScanner;
 import com.modlint.testutil.FixtureJars;
@@ -115,7 +116,7 @@ class AnalysisPassesTest {
     }
 
     @Test
-    void forgePackFolderYieldsOneFindingInsteadOfPerJarNoise(@TempDir Path dir) throws IOException {
+    void forgeMajorityFolderIsAnalyzedAsAForgePack(@TempDir Path dir) throws IOException {
         SyntheticJars.writeForgeJar(dir.resolve("a.jar"), "forgemoda");
         SyntheticJars.writeForgeJar(dir.resolve("b.jar"), "forgemodb");
         SyntheticJars.writeForgeJar(dir.resolve("c.jar"), "forgemodc");
@@ -123,17 +124,21 @@ class AnalysisPassesTest {
                 ", \"depends\": { \"somelib\": \">=1.0.0\" }");
         ModSet mods = new ModSet(scanner.scan(dir), Optional.empty());
 
+        assertEquals(ModLoader.FORGE, mods.targetLoader());
+        // The Fabric jar is the foreign one here; its Fabric-side dependencies are not judged.
         List<Finding> wrongLoader = new WrongLoaderPass().analyze(mods);
         assertEquals(1, wrongLoader.size());
-        assertEquals("not-a-fabric-pack", wrongLoader.get(0).type());
-        assertEquals(Severity.MEDIUM, wrongLoader.get(0).severity());
+        assertEquals("wrong-loader", wrongLoader.get(0).type());
+        assertEquals(List.of("fabricmod.jar"), wrongLoader.get(0).mods());
         assertTrue(new MissingDependencyPass().analyze(mods).isEmpty());
         assertTrue(new DeclaredIncompatibilityPass().analyze(mods).isEmpty());
     }
 
     @Test
-    void wrongLoaderFixtureIsFlagged(@TempDir Path dir) throws IOException {
-        ModSet mods = scanFixtures(dir, "wrong-loader", "jei-1.20.1-forge-15.20.0.130");
+    void wrongLoaderFixtureIsFlaggedInAFabricPack(@TempDir Path dir) throws IOException {
+        FixtureJars.packJar(FixtureJars.fixture("wrong-loader", "jei-1.20.1-forge-15.20.0.130"),
+                dir.resolve("jei-1.20.1-forge-15.20.0.130.jar"));
+        ModSet mods = new ModSet(scanner.scan(dir), Optional.empty(), ModLoader.FABRIC);
 
         List<Finding> findings = new WrongLoaderPass().analyze(mods);
 

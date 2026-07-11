@@ -11,7 +11,7 @@ class ReportTest {
 
     @Test
     void jsonShapeIsStable() {
-        Report report = new Report(2, 1, "1.20.1", List.of(
+        Report report = new Report(2, 1, "fabric", "1.20.1", List.of(
                 new Finding("missing-dependency", Severity.HIGH, List.of("iris", "sodium"),
                         "Iris requires sodium [0.5.x], but no installed mod provides it.",
                         "Install sodium in a version matching [0.5.x].")));
@@ -19,7 +19,8 @@ class ReportTest {
         String expected = """
                 {
                   "jars": 2,
-                  "fabricMods": 1,
+                  "mods": 1,
+                  "loader": "fabric",
                   "minecraftVersion": "1.20.1",
                   "findings": [
                     {
@@ -39,11 +40,12 @@ class ReportTest {
 
     @Test
     void absentMinecraftVersionIsOmitted() {
-        Report report = new Report(0, 0, null, List.of());
+        Report report = new Report(0, 0, "forge", null, List.of());
         assertEquals("""
                 {
                   "jars": 0,
-                  "fabricMods": 0,
+                  "mods": 0,
+                  "loader": "forge",
                   "findings": []
                 }""", report.toJson());
     }

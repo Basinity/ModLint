@@ -34,13 +34,16 @@ class ModsFolderScannerTest {
 
         ScannedJar iris = jars.get(0);
         assertEquals(Set.of(ModLoader.FABRIC), iris.loaders());
-        ModInfo irisMod = iris.fabricMod().orElseThrow();
+        ModInfo irisMod = iris.mods().get(0);
+        assertEquals(ModLoader.FABRIC, irisMod.loader());
         assertEquals("iris", irisMod.id());
         assertEquals(List.of("0.5.x"), irisMod.depends().get("sodium"));
 
         ScannedJar jei = jars.get(1);
         assertEquals(Set.of(ModLoader.FORGE), jei.loaders());
-        assertTrue(jei.fabricMod().isEmpty());
+        assertEquals(1, jei.mods().size());
+        assertEquals(ModLoader.FORGE, jei.mods().get(0).loader());
+        assertEquals("jei", jei.mods().get(0).id());
     }
 
     @Test
@@ -50,7 +53,7 @@ class ModsFolderScannerTest {
         List<ScannedJar> jars = scanner.scan(dir);
 
         assertEquals(1, jars.size());
-        assertEquals("outer", jars.get(0).fabricMod().orElseThrow().id());
+        assertEquals("outer", jars.get(0).mods().get(0).id());
         assertEquals(1, jars.get(0).nestedMods().size());
         ModInfo inner = jars.get(0).nestedMods().get(0);
         assertEquals("inner", inner.id());
@@ -63,7 +66,7 @@ class ModsFolderScannerTest {
 
         List<ScannedJar> jars = scanner.scan(dir);
 
-        assertEquals("deep", jars.get(0).fabricMod().orElseThrow().id());
+        assertEquals("deep", jars.get(0).mods().get(0).id());
         assertEquals(5, jars.get(0).nestedMods().size());
     }
 }

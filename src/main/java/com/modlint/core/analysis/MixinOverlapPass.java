@@ -21,7 +21,7 @@ public final class MixinOverlapPass implements AnalysisPass {
     public List<Finding> analyze(ModSet mods) {
         Map<String, List<Injector>> byTarget = new LinkedHashMap<>();
         for (ScannedJar jar : mods.jars()) {
-            jar.fabricMod().ifPresent(mod -> {
+            mods.primaryMod(jar).ifPresent(mod -> {
                 for (MixinInjection injection : jar.contents().mixinInjections()) {
                     byTarget.computeIfAbsent(injection.targetClass() + "#" + injection.targetMethod(),
                             key -> new ArrayList<>()).add(new Injector(mod.id(), injection));

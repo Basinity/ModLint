@@ -14,9 +14,6 @@ public final class DeclaredIncompatibilityPass implements AnalysisPass {
 
     @Override
     public List<Finding> analyze(ModSet mods) {
-        if (mods.foreignDominant()) {
-            return List.of(); // A Forge-pack folder: the versions that load are not the folder's to judge.
-        }
         List<Finding> findings = new ArrayList<>();
         for (ModInfo mod : mods.topLevelMods()) {
             collect(mods, mod, mod.breaks(), "breaks", Severity.HIGH, findings);
@@ -35,14 +32,16 @@ public final class DeclaredIncompatibilityPass implements AnalysisPass {
             List<String> ranges = entry.getValue();
             ModSet.Provider provider = mods.providerOf(targetId).orElse(null);
             if (provider == null || provider.modId().equals(mod.id())
-                    || !VersionRanges.satisfies(provider.version(), ranges)) {
+                    || !VersionRanges.satisfies(mod.loader(), provider.version(), ranges)) {
                 continue;
             }
             findings.add(new Finding("declared-incompatibility", severity,
                     List.of(mod.id(), targetId),
-                    mod.name() + " declares it " + verb + " " + targetId + " " + ranges
+                    mod.name() + " declares it " + verb + " " + targetId
+                            + (ranges.isEmpty() ? " in any version" : " " + ranges)
                             + ", and the installed version " + provider.version() + " matches.",
-                    "Update " + targetId + " out of the declared range, or remove one of the two mods."));
+                    ranges.isEmpty() ? "Remove one of the two mods."
+                            : "Update " + targetId + " out of the declared range, or remove one of the two mods."));
         }
     }
 }

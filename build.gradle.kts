@@ -32,6 +32,12 @@ dependencies {
     implementation("net.fabricmc:fabric-loader:0.19.3") {
         isTransitive = false
     }
+    // TOML parsing for mods.toml / neoforge.mods.toml; the same library Forge and NeoForge use.
+    implementation("com.electronwill.night-config:toml:3.8.2")
+    // Only for Maven version-range parsing, the range syntax Forge and NeoForge dependencies use.
+    implementation("org.apache.maven:maven-artifact:3.9.9") {
+        isTransitive = false
+    }
 
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")

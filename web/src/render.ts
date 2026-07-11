@@ -36,15 +36,22 @@ export function renderReport(root: HTMLElement, report: Report): void {
   }
 }
 
+const LOADER_LABEL: Record<string, string> = {
+  fabric: "Fabric",
+  forge: "Forge",
+  neoforge: "NeoForge",
+};
+
 function summary(report: Report): HTMLElement {
   const line = el("p", "report-summary");
   const target = report.minecraftVersion ? ` for Minecraft ${report.minecraftVersion}` : "";
   const count = report.findings.length;
+  const loader = LOADER_LABEL[report.loader] ?? report.loader;
   const verdict =
     count === 0 ? "no conflicts found" : `${count} ${count === 1 ? "finding" : "findings"}`;
   line.append(
     `Scanned ${report.jars} ${report.jars === 1 ? "jar" : "jars"}`,
-    ` (${report.fabricMods} Fabric ${report.fabricMods === 1 ? "mod" : "mods"})${target}: `,
+    ` (${report.mods} ${loader} ${report.mods === 1 ? "mod" : "mods"})${target}: `,
     strong(verdict, count === 0 ? "ok" : "")
   );
   return line;

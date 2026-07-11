@@ -14,9 +14,6 @@ public final class VersionRangeViolationPass implements AnalysisPass {
 
     @Override
     public List<Finding> analyze(ModSet mods) {
-        if (mods.foreignDominant()) {
-            return List.of(); // A Forge-pack folder: the versions that load are not the folder's to judge.
-        }
         List<Finding> findings = new ArrayList<>();
         for (ModInfo mod : mods.topLevelMods()) {
             for (Map.Entry<String, List<String>> dependency : mod.depends().entrySet()) {
@@ -29,7 +26,7 @@ public final class VersionRangeViolationPass implements AnalysisPass {
                     continue; // Absent entirely: the missing-dependency pass owns that.
                 }
                 List<String> ranges = dependency.getValue();
-                if (VersionRanges.satisfies(provider.version(), ranges)) {
+                if (VersionRanges.satisfies(mod.loader(), provider.version(), ranges)) {
                     continue;
                 }
                 String found = provider.version();

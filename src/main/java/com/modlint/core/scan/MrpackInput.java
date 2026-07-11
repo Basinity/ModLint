@@ -3,6 +3,7 @@ package com.modlint.core.scan;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.modlint.core.model.ModLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -27,8 +28,8 @@ import java.util.zip.ZipFile;
  */
 public final class MrpackInput {
 
-    /** An extracted-and-downloaded pack: the mods folder plus the index's Minecraft version. */
-    public record Materialized(Path modsFolder, Optional<String> minecraftVersion) {
+    /** An extracted-and-downloaded pack: the mods folder plus the index's Minecraft version and loader. */
+    public record Materialized(Path modsFolder, Optional<String> minecraftVersion, Optional<ModLoader> loader) {
     }
 
     private static final String INDEX_ENTRY = "modrinth.index.json";
@@ -52,7 +53,7 @@ public final class MrpackInput {
             }
             extractOverrideMods(zip, modsFolder);
             downloadRemoteMods(index, modsFolder);
-            return new Materialized(modsFolder, minecraftVersion(index));
+            return new Materialized(modsFolder, minecraftVersion(index), loader(index));
         }
     }
 
@@ -64,6 +65,21 @@ public final class MrpackInput {
         return dependencies.has("minecraft")
                 ? Optional.of(dependencies.get("minecraft").getAsString())
                 : Optional.empty();
+    }
+
+    /** The target loader the pack declares. Quilt packs analyze as Fabric, which Quilt loads. */
+    private static Optional<ModLoader> loader(JsonObject index) {
+        if (!index.has("dependencies")) {
+            return Optional.empty();
+        }
+        JsonObject dependencies = index.getAsJsonObject("dependencies");
+        if (dependencies.has("fabric-loader") || dependencies.has("quilt-loader")) {
+            return Optional.of(ModLoader.FABRIC);
+        }
+        if (dependencies.has("neoforge")) {
+            return Optional.of(ModLoader.NEOFORGE);
+        }
+        return dependencies.has("forge") ? Optional.of(ModLoader.FORGE) : Optional.empty();
     }
 
     /** Copies every jar under {@code overrides/mods/} or {@code client-overrides/mods/} out of the zip. */

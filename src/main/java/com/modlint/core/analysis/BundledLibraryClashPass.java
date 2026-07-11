@@ -20,7 +20,7 @@ public final class BundledLibraryClashPass implements AnalysisPass {
     public List<Finding> analyze(ModSet mods) {
         Map<String, List<Bundled>> bundlersByLibrary = new LinkedHashMap<>();
         for (ScannedJar jar : mods.jars()) {
-            jar.fabricMod().ifPresent(mod -> {
+            mods.primaryMod(jar).ifPresent(mod -> {
                 for (var nested : jar.nestedMods()) {
                     bundlersByLibrary.computeIfAbsent(nested.id(), key -> new ArrayList<>())
                             .add(new Bundled(mod.id(), nested.version()));

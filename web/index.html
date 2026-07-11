@@ -6,7 +6,7 @@
     <title>ModLint — find mod conflicts before the game does</title>
     <meta
       name="description"
-      content="Static analysis for Fabric mods folders: missing dependencies, version conflicts, Mixin overlaps, resource overrides, and known-bad combinations — checked before launch."
+      content="Static analysis for Fabric, Forge, and NeoForge mods folders: missing dependencies, version conflicts, Mixin overlaps, resource overrides, and known-bad combinations — checked before launch."
     />
     <script>
       const queryTheme = new URLSearchParams(location.search).get("theme");
@@ -29,7 +29,7 @@
       <section class="hero">
         <h1>Find mod conflicts <span class="accent">before the game does.</span></h1>
         <p class="lede">
-          ModLint reads a Fabric mods folder and reports what will break it: missing dependencies,
+          ModLint reads a Fabric, Forge, or NeoForge mods folder and reports what will break it: missing dependencies,
           version range violations, wrong-loader jars, Mixin overlaps, silent resource overrides,
           clashing bundled libraries, and known-bad combinations. The jars are read statically and
           discarded with the report.

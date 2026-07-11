@@ -5,6 +5,7 @@ import com.modlint.core.analysis.Finding;
 import com.modlint.core.analysis.IgnoreRules;
 import com.modlint.core.analysis.ModSet;
 import com.modlint.core.analysis.Severity;
+import com.modlint.core.model.ModLoader;
 import com.modlint.core.model.ScannedJar;
 import com.modlint.core.report.Report;
 import com.modlint.core.rules.Rule;
@@ -25,7 +26,7 @@ import picocli.CommandLine.Parameters;
 
 /** The modlint CLI: scans a mods folder or a Modrinth pack and reports conflict findings. */
 @Command(name = "modlint", mixinStandardHelpOptions = true, version = "modlint 0.1.0",
-        description = "Statically analyzes a Fabric mods folder or Modrinth .mrpack for conflicts.",
+        description = "Statically analyzes a Fabric/Forge/NeoForge mods folder or Modrinth .mrpack for conflicts.",
         exitCodeListHeading = "%nExit codes:%n",
         exitCodeList = {"0:no findings", "1:findings reported", "2:usage or input error"})
 public final class ModLintCommand implements Callable<Integer> {
@@ -38,6 +39,11 @@ public final class ModLintCommand implements Callable<Integer> {
             description = "Minecraft version to check 'minecraft' dependency ranges against. "
                     + "For an .mrpack, defaults to the version declared in the pack.")
     private String mcVersion;
+
+    @Option(names = "--loader", paramLabel = "<loader>",
+            description = "Loader to analyze for: fabric, forge or neoforge. Defaults to the loader "
+                    + "most jars target (for an .mrpack, the loader declared in the pack).")
+    private ModLoader loader;
 
     @Option(names = "--json", description = "Emit the report as JSON instead of text.")
     private boolean json;
@@ -53,18 +59,25 @@ public final class ModLintCommand implements Callable<Integer> {
     private Path rulesFile;
 
     public static void main(String[] args) {
-        System.exit(new CommandLine(new ModLintCommand()).execute(args));
+        System.exit(new CommandLine(new ModLintCommand())
+                .setCaseInsensitiveEnumValuesAllowed(true).execute(args));
     }
 
     @Override
     public Integer call() throws IOException {
+        if (loader == ModLoader.QUILT) {
+            System.err.println("Quilt is not an analyzable target; use fabric, forge or neoforge.");
+            return 2;
+        }
         Path modsFolder = target;
         Optional<String> minecraftVersion = Optional.ofNullable(mcVersion);
+        Optional<ModLoader> targetLoader = Optional.ofNullable(loader);
         if (Files.isRegularFile(target) && target.getFileName().toString().endsWith(".mrpack")) {
             MrpackInput.Materialized pack = new MrpackInput()
                     .materialize(target, Files.createTempDirectory("modlint-"));
             modsFolder = pack.modsFolder();
             minecraftVersion = minecraftVersion.or(pack::minecraftVersion);
+            targetLoader = targetLoader.or(pack::loader);
         } else if (!Files.isDirectory(target)) {
             System.err.println(target + " is neither a mods folder nor an .mrpack file.");
             return 2;
@@ -75,10 +88,13 @@ public final class ModLintCommand implements Callable<Integer> {
             rules.addAll(RulesLoader.load(rulesFile));
         }
         List<ScannedJar> jars = new ModsFolderScanner().scan(modsFolder);
-        List<Finding> findings = new Analyzer(rules).analyze(new ModSet(jars, minecraftVersion));
+        Optional<String> mc = minecraftVersion;
+        ModSet modSet = targetLoader.map(t -> new ModSet(jars, mc, t))
+                .orElseGet(() -> new ModSet(jars, mc));
+        List<Finding> findings = new Analyzer(rules).analyze(modSet);
         IgnoreRules ignore = loadIgnoreRules();
         List<Finding> reported = findings.stream().filter(finding -> !ignore.ignores(finding)).toList();
-        Report report = Report.of(jars, minecraftVersion, reported);
+        Report report = Report.of(modSet, reported);
 
         if (json) {
             System.out.println(report.toJson());
@@ -102,7 +118,8 @@ public final class ModLintCommand implements Callable<Integer> {
     }
 
     private static void printText(Report report, int ignoredCount) {
-        System.out.printf("Scanned %d jars (%d Fabric mods)%s.%n", report.jars(), report.fabricMods(),
+        System.out.printf("Scanned %d jars (%d %s mods)%s.%n", report.jars(), report.mods(),
+                report.loaderDisplayName(),
                 report.minecraftVersion() == null ? "" : " for Minecraft " + report.minecraftVersion());
         for (Severity severity : Severity.values()) {
             List<Finding> group = report.findings().stream()

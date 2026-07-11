@@ -17,7 +17,8 @@ if (theme) document.documentElement.dataset.theme = theme;
 
 const sample: Report = {
   jars: 100,
-  fabricMods: 97,
+  mods: 97,
+  loader: "fabric",
   minecraftVersion: "1.20.1",
   findings: [
     {
@@ -56,7 +57,7 @@ const sample: Report = {
 
 const root = document.getElementById("report") as HTMLElement;
 if (new URLSearchParams(location.search).get("clear") === "1") {
-  renderReport(root, { jars: 100, fabricMods: 97, minecraftVersion: "1.20.1", findings: [] });
+  renderReport(root, { jars: 100, mods: 97, loader: "fabric", minecraftVersion: "1.20.1", findings: [] });
 } else {
   renderReport(root, sample);
   document.querySelector("details.finding")?.setAttribute("open", "");

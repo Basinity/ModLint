@@ -19,7 +19,7 @@ public final class ResourceOverridePass implements AnalysisPass {
     public List<Finding> analyze(ModSet mods) {
         Map<String, List<String>> modsByPath = new LinkedHashMap<>();
         for (ScannedJar jar : mods.jars()) {
-            jar.fabricMod().ifPresent(mod -> {
+            mods.primaryMod(jar).ifPresent(mod -> {
                 for (String path : jar.contents().resourcePaths()) {
                     modsByPath.computeIfAbsent(path, key -> new ArrayList<>()).add(mod.id());
                 }

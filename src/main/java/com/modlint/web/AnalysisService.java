@@ -63,8 +63,9 @@ final class AnalysisService {
     private Report analyzeWithTimeout(Path modsFolder, Optional<String> minecraftVersion) {
         Future<Report> analysis = executor.submit(() -> {
             List<ScannedJar> jars = new ModsFolderScanner().scan(modsFolder);
-            List<Finding> findings = new Analyzer().analyze(new ModSet(jars, minecraftVersion));
-            return Report.of(jars, minecraftVersion, findings);
+            ModSet mods = new ModSet(jars, minecraftVersion);
+            List<Finding> findings = new Analyzer().analyze(mods);
+            return Report.of(mods, findings);
         });
         try {
             return analysis.get(limits.analysisTimeout().toMillis(), TimeUnit.MILLISECONDS);

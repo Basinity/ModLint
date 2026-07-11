@@ -1,9 +1,11 @@
 package com.modlint.core.version;
 
+import com.modlint.core.model.ModLoader;
 import java.util.List;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.api.metadata.version.VersionPredicate;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 /**
  * Evaluates fabric.mod.json version-range predicates against a version, using fabric-loader's
@@ -12,6 +14,16 @@ import net.fabricmc.loader.api.metadata.version.VersionPredicate;
 public final class VersionRanges {
 
     private VersionRanges() {
+    }
+
+    /**
+     * Evaluates {@code ranges} in the dialect the declaring mod's loader uses: Maven ranges
+     * for the Forge family, Fabric predicates otherwise.
+     */
+    public static boolean satisfies(ModLoader dialect, String version, List<String> ranges) {
+        return dialect.isForgeFamily()
+                ? MavenVersionRanges.satisfies(version, ranges)
+                : satisfies(version, ranges);
     }
 
     /**
@@ -42,14 +54,14 @@ public final class VersionRanges {
 
     /**
      * True when {@code candidate} parses as a newer version than {@code current}, using
-     * fabric-loader's comparison. False when either fails to parse, so an unparseable
-     * version never displaces one that parses.
+     * fabric-loader's comparison. When either side fails Fabric's parser (Forge-style
+     * versions often do), Maven's always-parsing comparison decides instead.
      */
     public static boolean isNewer(String candidate, String current) {
         try {
             return Version.parse(candidate).compareTo(Version.parse(current)) > 0;
         } catch (VersionParsingException e) {
-            return false;
+            return new ComparableVersion(candidate).compareTo(new ComparableVersion(current)) > 0;
         }
     }
 }

@@ -13,11 +13,16 @@ import java.util.Map;
  * one id are alternatives (OR). Evaluating them is the dependency resolver's job.
  *
  * <p>{@code nestedJars} are the jar-in-jar entry paths this mod bundles (fabric.mod.json
- * {@code jars}); the mods inside them count as present for dependency resolution.
- * {@code mixinConfigs} are the Mixin config entry names, {@code accessWidener} the access
- * widener entry name or null; both feed the deep analysis passes.
+ * {@code jars} or Forge's {@code META-INF/jarjar/metadata.json}); the mods inside them count
+ * as present for dependency resolution. {@code mixinConfigs} are the Mixin config entry
+ * names, {@code accessWidener} the access widener entry name or null; both feed the deep
+ * analysis passes.
+ *
+ * <p>{@code loader} is the loader whose metadata declared this mod; it decides which
+ * version-range dialect the relation values are written in.
  */
 public record ModInfo(
+        ModLoader loader,
         String id,
         String version,
         String name,

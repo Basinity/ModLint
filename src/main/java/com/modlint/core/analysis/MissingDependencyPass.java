@@ -10,22 +10,22 @@ public final class MissingDependencyPass implements AnalysisPass {
 
     @Override
     public List<Finding> analyze(ModSet mods) {
-        if (mods.foreignDominant()) {
-            return List.of(); // A Forge-pack folder: its compat layer satisfies deps this scan can't see.
-        }
         List<Finding> findings = new ArrayList<>();
         for (ModInfo mod : mods.topLevelMods()) {
             for (Map.Entry<String, List<String>> dependency : mod.depends().entrySet()) {
                 String depId = dependency.getKey();
-                if (ModSet.PLATFORM_IDS.contains(depId) || ModSet.LOADER_BUNDLED_IDS.contains(depId)
+                if (mods.platformIds().contains(depId) || ModSet.LOADER_BUNDLED_IDS.contains(depId)
                         || mods.providerOf(depId).isPresent()) {
                     continue;
                 }
+                boolean anyVersion = dependency.getValue().isEmpty();
                 findings.add(new Finding("missing-dependency", Severity.HIGH,
                         List.of(mod.id(), depId),
-                        mod.name() + " requires " + depId + " " + dependency.getValue()
+                        mod.name() + " requires " + depId
+                                + (anyVersion ? "" : " " + dependency.getValue())
                                 + ", but no installed mod provides it.",
-                        "Install " + depId + " in a version matching " + dependency.getValue() + "."));
+                        anyVersion ? "Install " + depId + "."
+                                : "Install " + depId + " in a version matching " + dependency.getValue() + "."));
             }
         }
         return findings;

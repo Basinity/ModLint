@@ -8,9 +8,12 @@ export interface Finding {
   fix: string;
 }
 
+export type Loader = "fabric" | "forge" | "neoforge";
+
 export interface Report {
   jars: number;
-  fabricMods: number;
+  mods: number;
+  loader: Loader;
   minecraftVersion?: string;
   findings: Finding[];
 }
