@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Finds two mods shipping the same {@code assets/} or {@code data/} file, where whichever
  * loads last silently wins. Paths the game merges (language files, tags) are excluded at
- * scan time. One finding per mod pair, with example paths.
+ * scan time. One finding per group of mods sharing paths, with example paths.
  */
 public final class ResourceOverridePass implements AnalysisPass {
 

@@ -100,6 +100,25 @@ class ModLintCommandTest {
     }
 
     @Test
+    void corruptMrpackExitsTwo(@TempDir Path dir) throws IOException {
+        Path mrpack = dir.resolve("corrupt.mrpack");
+        Files.writeString(mrpack, "not a zip");
+
+        assertEquals(2, run(mrpack.toString()).exitCode());
+    }
+
+    @Test
+    void jarWithMalformedFabricMetadataExitsTwo(@TempDir Path dir) throws IOException {
+        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(dir.resolve("broken.jar")))) {
+            out.putNextEntry(new JarEntry("fabric.mod.json"));
+            out.write("not json at all".getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+
+        assertEquals(2, run(dir.toString()).exitCode());
+    }
+
+    @Test
     void extraRulesFileFiresItsRule(@TempDir Path dir) throws IOException {
         packMissingDependencyFolder(dir); // provides iris 1.7.6
         Path rules = dir.resolve("rules.yaml");

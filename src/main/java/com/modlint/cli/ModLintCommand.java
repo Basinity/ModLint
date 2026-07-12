@@ -16,9 +16,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -64,44 +66,65 @@ public final class ModLintCommand implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws IOException {
+    public Integer call() {
         if (loader == ModLoader.QUILT) {
             System.err.println("Quilt is not an analyzable target; use fabric, forge or neoforge.");
             return 2;
         }
-        Path modsFolder = target;
-        Optional<String> minecraftVersion = Optional.ofNullable(mcVersion);
-        Optional<ModLoader> targetLoader = Optional.ofNullable(loader);
-        if (Files.isRegularFile(target) && target.getFileName().toString().endsWith(".mrpack")) {
-            MrpackInput.Materialized pack = new MrpackInput()
-                    .materialize(target, Files.createTempDirectory("modlint-"));
-            modsFolder = pack.modsFolder();
-            minecraftVersion = minecraftVersion.or(pack::minecraftVersion);
-            targetLoader = targetLoader.or(pack::loader);
-        } else if (!Files.isDirectory(target)) {
-            System.err.println(target + " is neither a mods folder nor an .mrpack file.");
+        Path workDir = null;
+        try {
+            Path modsFolder = target;
+            Optional<String> minecraftVersion = Optional.ofNullable(mcVersion);
+            Optional<ModLoader> targetLoader = Optional.ofNullable(loader);
+            if (Files.isRegularFile(target) && target.getFileName().toString().endsWith(".mrpack")) {
+                workDir = Files.createTempDirectory("modlint-");
+                MrpackInput.Materialized pack = new MrpackInput().materialize(target, workDir);
+                modsFolder = pack.modsFolder();
+                minecraftVersion = minecraftVersion.or(pack::minecraftVersion);
+                targetLoader = targetLoader.or(pack::loader);
+            } else if (!Files.isDirectory(target)) {
+                System.err.println(target + " is neither a mods folder nor an .mrpack file.");
+                return 2;
+            }
+
+            List<Rule> rules = new ArrayList<>(RulesLoader.loadBundled());
+            if (rulesFile != null) {
+                rules.addAll(RulesLoader.load(rulesFile));
+            }
+            List<ScannedJar> jars = new ModsFolderScanner().scan(modsFolder);
+            Optional<String> mc = minecraftVersion;
+            ModSet modSet = targetLoader.map(t -> new ModSet(jars, mc, t))
+                    .orElseGet(() -> new ModSet(jars, mc));
+            List<Finding> findings = new Analyzer(rules).analyze(modSet);
+            IgnoreRules ignore = loadIgnoreRules();
+            List<Finding> reported = findings.stream().filter(finding -> !ignore.ignores(finding)).toList();
+            Report report = Report.of(modSet, reported);
+
+            if (json) {
+                System.out.println(report.toJson());
+            } else {
+                printText(report, findings.size() - reported.size());
+            }
+            return reported.isEmpty() ? 0 : 1;
+        } catch (IOException | IllegalArgumentException e) {
+            // Unreadable input (a corrupt jar or .mrpack, a malformed rules file) is the
+            // documented exit code 2, not a stack trace colliding with "findings reported".
+            System.err.println("Error: " + (e.getMessage() == null ? e : e.getMessage()));
             return 2;
+        } finally {
+            if (workDir != null) {
+                deleteRecursively(workDir);
+            }
         }
+    }
 
-        List<Rule> rules = new ArrayList<>(RulesLoader.loadBundled());
-        if (rulesFile != null) {
-            rules.addAll(RulesLoader.load(rulesFile));
+    /** Best-effort removal of the .mrpack work folder; leftovers would pile up in the OS temp dir. */
+    private static void deleteRecursively(Path root) {
+        try (Stream<Path> paths = Files.walk(root)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> path.toFile().delete());
+        } catch (IOException e) {
+            // Nothing to do; the OS temp folder is the fallback.
         }
-        List<ScannedJar> jars = new ModsFolderScanner().scan(modsFolder);
-        Optional<String> mc = minecraftVersion;
-        ModSet modSet = targetLoader.map(t -> new ModSet(jars, mc, t))
-                .orElseGet(() -> new ModSet(jars, mc));
-        List<Finding> findings = new Analyzer(rules).analyze(modSet);
-        IgnoreRules ignore = loadIgnoreRules();
-        List<Finding> reported = findings.stream().filter(finding -> !ignore.ignores(finding)).toList();
-        Report report = Report.of(modSet, reported);
-
-        if (json) {
-            System.out.println(report.toJson());
-        } else {
-            printText(report, findings.size() - reported.size());
-        }
-        return reported.isEmpty() ? 0 : 1;
     }
 
     private IgnoreRules loadIgnoreRules() throws IOException {
