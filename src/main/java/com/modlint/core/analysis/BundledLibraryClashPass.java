@@ -22,6 +22,11 @@ public final class BundledLibraryClashPass implements AnalysisPass {
         for (ScannedJar jar : mods.jars()) {
             mods.primaryMod(jar).ifPresent(mod -> {
                 for (var nested : jar.nestedMods()) {
+                    // A multiloader nested jar carries one ModInfo per metadata flavor; only
+                    // the flavor the target loader loads competes in the newest-wins rule.
+                    if (!mods.acceptedLoaders().contains(nested.loader())) {
+                        continue;
+                    }
                     bundlersByLibrary.computeIfAbsent(nested.id(), key -> new ArrayList<>())
                             .add(new Bundled(mod.id(), nested.version()));
                 }

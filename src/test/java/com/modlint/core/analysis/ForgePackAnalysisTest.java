@@ -98,6 +98,22 @@ class ForgePackAnalysisTest {
     }
 
     @Test
+    void multiloaderNestedJarCountsUnderAForgeTarget(@TempDir Path dir) throws IOException {
+        SyntheticJars.writeForgeJarWithMultiloaderNested(dir.resolve("bundler.jar"), "bundler", "1.0.0",
+                "innerlib", "3.2.0");
+        SyntheticJars.writeTomlJar(dir.resolve("user.jar"), "META-INF/mods.toml",
+                SyntheticJars.forgeToml("usermod", "1.0.0",
+                        SyntheticJars.forgeDependency("usermod", "innerlib", null)));
+        ModSet mods = scan(dir, Optional.empty());
+
+        assertEquals(ModLoader.FORGE, mods.targetLoader());
+        assertTrue(new MissingDependencyPass().analyze(mods).isEmpty());
+        // Only the Forge flavor of the nested jar competes, so its differently spelled
+        // version must not read as a second bundled copy.
+        assertTrue(new BundledLibraryClashPass().analyze(mods).isEmpty());
+    }
+
+    @Test
     void neoForgeTargetAcceptsForgeJarsOnlyThrough120(@TempDir Path dir) throws IOException {
         SyntheticJars.writeTomlJar(dir.resolve("neomod.jar"), "META-INF/neoforge.mods.toml",
                 SyntheticJars.forgeToml("neomod", "1.0.0", ""));

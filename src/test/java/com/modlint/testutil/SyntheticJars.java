@@ -74,13 +74,35 @@ public final class SyntheticJars {
     /** Writes a Forge jar bundling one nested jar-in-jar mod via {@code META-INF/jarjar/metadata.json}. */
     public static void writeForgeJarWithJarJar(Path jar, String id, String version,
                                                String nestedId, String nestedVersion) throws IOException {
-        String nestedPath = "META-INF/jarjar/" + nestedId + ".jar";
         ByteArrayOutputStream nestedBytes = new ByteArrayOutputStream();
         try (JarOutputStream nested = new JarOutputStream(nestedBytes)) {
             nested.putNextEntry(new JarEntry("META-INF/mods.toml"));
             nested.write(forgeToml(nestedId, nestedVersion, "").getBytes(StandardCharsets.UTF_8));
             nested.closeEntry();
         }
+        writeJarJarOuter(jar, id, version, nestedId, nestedVersion, nestedBytes.toByteArray());
+    }
+
+    /**
+     * Like {@link #writeForgeJarWithJarJar}, but the nested jar carries Fabric and Forge
+     * metadata; the Forge flavor defers its version to a manifest the jar does not have,
+     * the common multiloader library shape.
+     */
+    public static void writeForgeJarWithMultiloaderNested(Path jar, String id, String version,
+                                                          String nestedId, String nestedVersion) throws IOException {
+        ByteArrayOutputStream nestedBytes = new ByteArrayOutputStream();
+        try (JarOutputStream nested = new JarOutputStream(nestedBytes)) {
+            writeMetadata(nested, metadata(nestedId, nestedVersion, ""));
+            nested.putNextEntry(new JarEntry("META-INF/mods.toml"));
+            nested.write(forgeToml(nestedId, "${file.jarVersion}", "").getBytes(StandardCharsets.UTF_8));
+            nested.closeEntry();
+        }
+        writeJarJarOuter(jar, id, version, nestedId, nestedVersion, nestedBytes.toByteArray());
+    }
+
+    private static void writeJarJarOuter(Path jar, String id, String version, String nestedId,
+                                         String nestedVersion, byte[] nestedBytes) throws IOException {
+        String nestedPath = "META-INF/jarjar/" + nestedId + ".jar";
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
             out.putNextEntry(new JarEntry("META-INF/mods.toml"));
             out.write(forgeToml(id, version, "").getBytes(StandardCharsets.UTF_8));
@@ -92,7 +114,7 @@ public final class SyntheticJars {
                     .getBytes(StandardCharsets.UTF_8));
             out.closeEntry();
             out.putNextEntry(new JarEntry(nestedPath));
-            out.write(nestedBytes.toByteArray());
+            out.write(nestedBytes);
             out.closeEntry();
         }
     }

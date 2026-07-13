@@ -168,16 +168,22 @@ public final class ModsFolderScanner {
                 ModInfo mod = fabricParser.parse(fabricMetadata.get());
                 out.add(mod);
                 nestedPaths.addAll(mod.nestedJars());
-            } else {
-                Optional<Manifest> manifest = readManifest(entry -> reader.readEntry(jarBytes, entry));
-                for (ModLoader forgeLoader : List.of(ModLoader.NEOFORGE, ModLoader.FORGE)) {
-                    String entry = forgeLoader == ModLoader.FORGE ? FORGE_METADATA_ENTRY : NEOFORGE_METADATA_ENTRY;
-                    Optional<byte[]> toml = reader.readEntry(jarBytes, entry);
-                    if (toml.isPresent()) {
-                        out.addAll(forgeParser.parse(new String(toml.get(), StandardCharsets.UTF_8),
-                                forgeLoader, implementationVersion(manifest)).mods());
-                        break; // One metadata flavor per nested jar, so its ids count once.
-                    }
+            }
+            // Every flavor is collected (a multiloader nested jar must count under either
+            // target); the analysis filters by the loaders the target actually loads.
+            for (ModLoader forgeLoader : List.of(ModLoader.NEOFORGE, ModLoader.FORGE)) {
+                String entry = forgeLoader == ModLoader.FORGE ? FORGE_METADATA_ENTRY : NEOFORGE_METADATA_ENTRY;
+                Optional<byte[]> toml = reader.readEntry(jarBytes, entry);
+                if (toml.isEmpty()) {
+                    continue;
+                }
+                Optional<Manifest> manifest = readManifest(name -> reader.readEntry(jarBytes, name));
+                try {
+                    out.addAll(forgeParser.parse(new String(toml.get(), StandardCharsets.UTF_8),
+                            forgeLoader, implementationVersion(manifest)).mods());
+                    break; // One Forge-family flavor per nested jar, so its ids count once.
+                } catch (RuntimeException e) {
+                    // A malformed flavor just doesn't count, same as at the top level.
                 }
             }
             reader.readEntry(jarBytes, JARJAR_METADATA_ENTRY).ifPresent(metadata ->
