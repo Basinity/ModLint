@@ -1,6 +1,6 @@
 /* ModLint web UI.
    Severity colors are palette-validated per mode (lightness band, chroma, CVD separation,
-   contrast vs surface); severity is never encoded by color alone — every use rides with text. */
+   contrast vs surface); severity is never encoded by color alone, every use rides with text. */
 
 :root {
   --bg: #eef1f4;

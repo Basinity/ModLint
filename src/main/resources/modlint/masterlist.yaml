@@ -1,7 +1,7 @@
 # ModLint masterlist: known-bad mod combinations that metadata alone does not reveal.
 # A rule fires when every mod under 'mods' is installed in a version matching its range
 # ("*" = any version; ranges use fabric.mod.json predicate syntax) and none of the ids
-# under 'absent' is installed — 'absent' expresses missing-companion rules.
+# under 'absent' is installed; 'absent' expresses missing-companion rules.
 # Contributions welcome via pull request; keep entries to combinations that are
 # documented or reproducible, and say what to do instead in 'fix'.
 

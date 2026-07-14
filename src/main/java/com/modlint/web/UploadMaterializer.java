@@ -37,7 +37,7 @@ final class UploadMaterializer {
             String lower = name.toLowerCase(Locale.ROOT);
             if (lower.endsWith(".jar")) {
                 try (InputStream in = file.content()) {
-                    copyCapped(in, uniqueTarget(modsFolder, name), name, budget);
+                    copyCapped(in, uniqueTarget(modsFolder, storedJarName(name)), name, budget);
                 }
             } else if (lower.endsWith(".zip")) {
                 extractJars(file, modsFolder, budget);
@@ -61,9 +61,14 @@ final class UploadMaterializer {
                 if (entry.isDirectory() || !name.toLowerCase(Locale.ROOT).endsWith(".jar")) {
                     continue;
                 }
-                copyCapped(in, uniqueTarget(modsFolder, name), name, budget);
+                copyCapped(in, uniqueTarget(modsFolder, storedJarName(name)), name, budget);
             }
         }
+    }
+
+    /** The stored name always ends in a lowercase ".jar", the only spelling the folder scanner picks up. */
+    private static String storedJarName(String name) {
+        return name.substring(0, name.length() - ".jar".length()) + ".jar";
     }
 
     /** The base file name only, so neither an upload name nor a zip entry path can point elsewhere. */

@@ -62,6 +62,20 @@ class ModLintServerTest {
     }
 
     @Test
+    void uppercaseJarExtensionIsStillAnalyzed(@TempDir Path dir) throws Exception {
+        Path iris = dir.resolve("iris.jar");
+        FixtureJars.packJar(FixtureJars.fixture("missing-dependency", "iris-1.7.6+mc1.20.1"), iris);
+
+        HttpResponse<String> response = post(Limits.defaults(),
+                multipart(part("IRIS-1.7.6.JAR", Files.readAllBytes(iris))));
+
+        assertEquals(200, response.statusCode());
+        JsonObject report = JsonParser.parseString(response.body()).getAsJsonObject();
+        assertEquals(1, report.get("jars").getAsInt());
+        assertTrue(response.body().contains("missing-dependency"));
+    }
+
+    @Test
     void rejectsFilesThatAreNeitherJarNorZip() throws Exception {
         HttpResponse<String> response = post(Limits.defaults(),
                 multipart(part("pack.mrpack", new byte[] {1, 2, 3})));
