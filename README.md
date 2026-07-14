@@ -137,3 +137,7 @@ ModLint is a pre-launch check, not a guarantee. Static analysis cannot observe t
 ```
 
 Requires JDK 21. Node and npm are only needed for the `serverJar` task, which bundles the browser UI; plain builds and tests stay npm-free.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
