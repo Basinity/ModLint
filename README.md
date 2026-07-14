@@ -6,6 +6,8 @@ ModLint statically analyzes a Minecraft mods folder (Fabric, Forge, or NeoForge)
 
 Try it in the browser at [modlint.basinity.com](https://modlint.basinity.com), or run the CLI locally.
 
+![The modlint CLI analyzing a mods folder and reporting a missing dependency and three Mixin overlaps](docs/demo.gif)
+
 ModLint only reads the jars. It never loads or executes mod code, and it does not need a game installation.
 
 ## Why
