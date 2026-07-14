@@ -1,5 +1,7 @@
 # ModLint
 
+[![build](https://github.com/Basinity/ModLint/actions/workflows/build.yml/badge.svg)](https://github.com/Basinity/ModLint/actions/workflows/build.yml)
+
 Find mod conflicts before the game does.
 
 ModLint statically analyzes a Minecraft mods folder (Fabric, Forge, or NeoForge) or a Modrinth `.mrpack` file and reports what will break the pack: missing dependencies, failed version ranges, wrong-loader jars, overlapping Mixins, silent resource overrides, clashing bundled libraries, and combinations known to be incompatible. All of it in one report, before the game is ever launched. Think of it as LOOT (the load-order tool for Bethesda games), for Minecraft.
