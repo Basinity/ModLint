@@ -105,7 +105,7 @@ Compatibility layers are respected: when Kilt or Sinytra Connector is present, a
 
 ### The Mixin overlap heuristic
 
-Mixin conflicts are the failures modpack builders fear most, and the least visible before launch. ModLint reads each mod's Mixin config JSONs (including those named in a `MixinConfigs` manifest attribute or a NeoForge `[[mixins]]` table), then uses ASM to read the injector annotations on the referenced classes. Only intrusive injectors count: `@Overwrite`, `@Redirect`, `@ModifyConstant`, and `@ModifyArg(s)`, the ones where two mods touching the same code are fragile together. `@Inject` is excluded because it composes. When two mods target the same class and method intrusively, that overlap is flagged as a potential finding: a real risk, not a proven crash, which is exactly what the severity tier says. [docs/mixin-overlap.md](docs/mixin-overlap.md) walks through the whole detection in detail.
+Mixin conflicts are the failures modpack builders fear most, and the least visible before launch. ModLint reads each mod's Mixin config JSONs (including those named in a `MixinConfigs` manifest attribute or a NeoForge `[[mixins]]` table), then uses ASM to read the injector annotations on the referenced classes. Only intrusive injectors count: `@Overwrite`, `@Redirect`, `@ModifyConstant`, and `@ModifyArg(s)`, the ones where two mods touching the same code are fragile together. `@Inject` is excluded because it composes. When two mods target the same class and method intrusively, that overlap is flagged as a potential finding: a real risk, not a proven crash, which is exactly what the severity tier says.
 
 ## The masterlist
 
