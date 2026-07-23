@@ -27,7 +27,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /** The modlint CLI: scans a mods folder or a Modrinth pack and reports conflict findings. */
-@Command(name = "modlint", mixinStandardHelpOptions = true, version = "modlint 0.1.0",
+@Command(name = "modlint", mixinStandardHelpOptions = true, version = "modlint 1.0.0",
         description = "Statically analyzes a Fabric/Forge/NeoForge mods folder or Modrinth .mrpack for conflicts.",
         exitCodeListHeading = "%nExit codes:%n",
         exitCodeList = {"0:no findings", "1:findings reported", "2:usage or input error"})
